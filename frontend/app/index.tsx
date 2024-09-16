@@ -30,7 +30,7 @@ export default function Index() {
   >([]);
   const [isGameStarted, setIsGameStarted] = useState<boolean>(false);
   const [isGameWon, setIsGameWon] = useState<boolean>(false);
-  const [isGameOver, setIsGameOver] = useState<boolean>(false); // New state to track if the game is over
+  const [isGameOver, setIsGameOver] = useState<boolean>(false);
   const [currentPlayer, setCurrentPlayer] = useState<string>('');
   const [turnIndicator, setTurnIndicator] = useState<string>('');
   const [socket, setSocket] = useState<WebSocket | null>(null);
@@ -41,7 +41,7 @@ export default function Index() {
 
   const confettiRef = useRef<any>(null);
 
-  const serverUrl = 'http://192.168.1.246:3000';
+  const serverUrl = 'https://mobilewordguess.onrender.com'; // Updated server URL
 
   function generateSessionId() {
     return '_' + Math.random().toString(36).substr(2, 9);
@@ -108,7 +108,7 @@ export default function Index() {
 
     if (data.response && data.response.includes('Congratulations!')) {
       setIsGameWon(true);
-      setIsGameOver(true); // Mark game as over when it's won
+      setIsGameOver(true);
       confettiRef.current && confettiRef.current.start();
     }
   };
@@ -122,7 +122,7 @@ export default function Index() {
     setIsGameStarted(true);
     setFeedbackMessage('Waiting for partner...');
 
-    const ws = new WebSocket(`${serverUrl.replace('http', 'ws')}`);
+    const ws = new WebSocket(`${serverUrl.replace('https', 'wss')}`);
 
     ws.onopen = () => {
       ws.send(JSON.stringify({ gameId: gameId.trim(), playerName: playerName.trim() }));
@@ -165,23 +165,22 @@ export default function Index() {
       updateGameUI(data);
     }
 
-    // Check for win or lose scenario
     if (data.response && data.response.includes('Congratulations!')) {
       if (data.currentPlayer !== playerName.trim()) {
-        setIsGameWon(true); // This player won
-        setIsGameOver(true); // Mark the game as over
+        setIsGameWon(true);
+        setIsGameOver(true);
       } else {
-        setIsGameWon(false); // This player lost
-        setIsGameOver(true); // Mark the game as over
+        setIsGameWon(false);
+        setIsGameOver(true);
         setResponse("You've lost!");
-        setEmoji('😢'); // Display a sad emoji
+        setEmoji('😢');
       }
     }
   };
 
   const resetGameState = () => {
     setIsGameWon(false);
-    setIsGameOver(false); 
+    setIsGameOver(false);
     setResponse('');
     setUserGuess('');
     setGuessCount(0);
