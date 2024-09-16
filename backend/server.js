@@ -1,4 +1,3 @@
-// server.js
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
@@ -18,15 +17,34 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-app.use(cors());
+// CORS configuration
+const allowedOrigins = [
+  "http://localhost:8081",
+  "https://your-production-url.com",
+]; // Add your production URL here if needed
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin like mobile apps
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // Allow credentials if needed
+  })
+);
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 let games = {};
-let sessions = {}; // Store session-specific data
+let sessions = {};
 
 // Function to load and select a random word from words.json
-// TODO: Make this more efficient by not reading the file every time
 function loadRandomWord() {
   const filePath = path.join(__dirname, "words.json");
   const data = fs.readFileSync(filePath, "utf8");
@@ -71,7 +89,6 @@ function handleSinglePlayerGuess(sessionId, userGuess, res) {
   console.log("Secret word for session:", sessionId, secretWord);
 
   if (userGuess.toLowerCase() === secretWord.toLowerCase()) {
-    // Send the winning response without HTML
     return res.json({
       yourGuess: userGuess,
       response: "Congratulations! You've guessed the secret word!",
@@ -125,37 +142,29 @@ async function generateResponse(
 ) {
   console.log("Secret word on generateResponse:", secretWord);
 
-  const prompt = `We're going to play a simple game.
-We have two words:
-Users guess - "${userGuess}"
-Secret word - "${secretWord}"
-Write the connection you find between the words in one sentence.
-Do not use the secret word directly, but you are encouraged to use the user's guess directly.
-Don't be too obvious or specific in your answer. Don't use the secret word's emoji.
-
-For example, if "users guess" was "sky" and the secret word was "penguin" a good response would be:
-"Some kind of the secret word can be found in the sky."
-Note that "sky" is the user's guess, thus we're allowed to use it, while penguin is the secret word, so we do not use it.
-
-Keep your tone light, breezy and fun. You can use humor and slang in moderation.
-Use common words rather than higher language.
-Finish it off by giving the two words a 'connection score' from 1 to 10. This score represents a *direct* connection between the two words.
-For example, for 'fire' and 'bonfire' you can finish it off with: 'connection score: 9.', while for 'brick' and 'plant' you might write: 'connection score: 1.'.
-Write the connection score on a new line.
-
-Respond only with plain text without any HTML tags.`;
+  const prompt = `
+    We're going to play a simple game.
+    We have two words:
+    User's guess - "${userGuess}"
+    Secret word - "${secretWord}"
+    Write the connection you find between the words in one sentence.
+    Do not use the secret word directly, but you are encouraged to use the user's guess directly.
+    Don't be too obvious or specific in your answer. Don't use the secret word's emoji.
+    
+    Keep your tone light, breezy, and fun. You can use humor and slang in moderation.
+    Finish it off by giving the two words a 'connection score' from 1 to 10.
+  `;
 
   const promptEmoji = `Respond only with the best fitting emoji for the word "${userGuess}" without any additional text.`;
 
   try {
-    // TODO: consider combining the await calls with Promise.all
     const completion = await openai.createChatCompletion({
-      model: "gpt-4o-mini",
+      model: "gpt-4",
       messages: [{ role: "system", content: prompt }],
     });
 
     const emojiCompletion = await openai.createChatCompletion({
-      model: "gpt-4o-mini",
+      model: "gpt-4",
       messages: [{ role: "system", content: promptEmoji }],
     });
 
@@ -218,7 +227,6 @@ wss.on("connection", (ws) => {
     } else if (game.players.length < 2) {
       game.players.push({ name: playerName, ws });
 
-      // Notify both players that the game can start and whose turn it is
       broadcastGameState(gameId, {
         message: "Both players have joined. Let's start the game!",
         currentPlayer: game.players[game.currentTurn].name,
@@ -229,7 +237,6 @@ wss.on("connection", (ws) => {
   });
 
   ws.on("close", () => {
-    // Handle player disconnect, if necessary
     const gameId = ws.gameId;
     if (games[gameId]) {
       games[gameId].players = games[gameId].players.filter(
