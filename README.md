@@ -1,50 +1,57 @@
-# Welcome to your Expo app 👋
+# Word Guess Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Overview
 
-## Get started
+Word Guess Mobile is a fun and interactive game where players guess a secret word based on hints provided. The game supports both single-player and multiplayer modes, allowing users to challenge themselves or compete with friends.
 
-1. Install dependencies
+## Features
+
+- **Single Player Mode**: Play against the system and try to guess the secret word.
+- **Multiplayer Mode**: Compete with a friend in real-time.
+- **WebSocket Integration**: Real-time updates and interactions during multiplayer games.
+
+## Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/yourusername/wordguessmobile.git
+   cd wordguessmobile
+   ```
+
+2. Install dependencies:
 
    ```bash
    npm install
    ```
 
-2. Start the app
-
+3. Start the development server:
    ```bash
-    npx expo start
+   npm start
    ```
 
-In the output, you'll find options to open the app in a
+## Usage
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Select your game mode (Single Player or Multiplayer).
+- Enter your guess and submit it.
+- In multiplayer mode, wait for your turn and see the responses from your opponent.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Technologies Used
 
-## Get a fresh project
+- **React Native**: For building the mobile application.
+- **Express**: For the backend server.
+- **WebSocket**: For real-time communication in multiplayer mode.
+- **OpenAI API**: For generating hints and responses.
 
-When you're ready, run:
+## Contributing
 
-```bash
-npm run reset-project
-```
+Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## License
 
-## Learn more
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-To learn more about developing your project with Expo, look at the following resources:
+## Acknowledgments
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Thanks to the OpenAI team for their API.
+- Special thanks to the React Native community for their support and resources.
