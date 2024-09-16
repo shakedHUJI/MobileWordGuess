@@ -1,7 +1,12 @@
-import Index from './index';  // Assuming index.tsx is in the same directory
+// app/_layout.tsx
+import { Slot } from 'expo-router';
+import { View } from 'react-native';
+import styles from '../styles/styles';
 
 export default function RootLayout() {
   return (
-    <Index />  // Directly render the index component
+    <View style={styles.container}>
+      <Slot />
+    </View>
   );
 }

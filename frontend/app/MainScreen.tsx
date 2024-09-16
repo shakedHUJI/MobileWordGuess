@@ -1,13 +1,9 @@
-// app/index.tsx
+// MainScreen.tsx
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import styles from '../styles/styles';
-import { useRouter } from 'expo-router';
 
-export default function MainScreen() {
-  const router = useRouter();
-
-  return (
+export default function MainScreen({ navigation }: { navigation: any }) {  return (
     <View style={styles.container}>
       <Text style={styles.mainHeader}>Word Guess</Text>
       <View style={styles.modeSelectionContainer}>
@@ -15,7 +11,7 @@ export default function MainScreen() {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
-            onPress={() => router.push('/single-player')}
+            onPress={() => navigation.navigate('SinglePlayerGame')}
           >
             <Text style={styles.buttonText}>Single Player</Text>
           </TouchableOpacity>
@@ -23,7 +19,7 @@ export default function MainScreen() {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
-            onPress={() => router.push('/multi-player')}
+            onPress={() => navigation.navigate('MultiPlayerGame')}
           >
             <Text style={styles.buttonText}>2-Player</Text>
           </TouchableOpacity>

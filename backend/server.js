@@ -133,7 +133,6 @@ function handleMultiPlayerGuess(gameId, playerName, userGuess, res) {
 }
 
 // Function to generate a response using the OpenAI API
-// Function to generate a response using the OpenAI API
 async function generateResponse(
   userGuess,
   secretWord,
