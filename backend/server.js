@@ -133,6 +133,7 @@ function handleMultiPlayerGuess(gameId, playerName, userGuess, res) {
 }
 
 // Function to generate a response using the OpenAI API
+// Function to generate a response using the OpenAI API
 async function generateResponse(
   userGuess,
   secretWord,
@@ -158,15 +159,17 @@ async function generateResponse(
   const promptEmoji = `Respond only with the best fitting emoji for the word "${userGuess}" without any additional text.`;
 
   try {
-    const completion = await openai.createChatCompletion({
-      model: "gpt-4",
-      messages: [{ role: "system", content: prompt }],
-    });
-
-    const emojiCompletion = await openai.createChatCompletion({
-      model: "gpt-4",
-      messages: [{ role: "system", content: promptEmoji }],
-    });
+    // Execute both API requests in parallel using Promise.all
+    const [completion, emojiCompletion] = await Promise.all([
+      openai.createChatCompletion({
+        model: "gpt-4",
+        messages: [{ role: "system", content: prompt }],
+      }),
+      openai.createChatCompletion({
+        model: "gpt-4",
+        messages: [{ role: "system", content: promptEmoji }],
+      }),
+    ]);
 
     const responseData = {
       yourGuess: userGuess,
