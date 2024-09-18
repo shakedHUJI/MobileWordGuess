@@ -105,8 +105,6 @@ function handleSinglePlayerGuess(sessionId, userGuess, res) {
 // Function to handle multiplayer guesses
 function handleMultiPlayerGuess(gameId, playerName, userGuess, res) {
   const game = games[gameId];
-  // print all the games
-  console.log("Games:", games);
 
   if (!game) {
     return res.status(404).json({ error: "Game not found" });
@@ -223,6 +221,8 @@ function generateUniqueGameId() {
 // Modify the WebSocket connection handler
 wss.on("connection", (ws) => {
   ws.on("message", (message) => {
+    // print all the games
+    console.log("Games:", games);
     const data = JSON.parse(message);
 
     if (data.action === "create_game") {
