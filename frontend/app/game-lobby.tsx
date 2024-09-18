@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import styles from '../styles/styles';
 
@@ -7,15 +7,48 @@ export default function GameLobby() {
   const router = useRouter();
   const { playerName, gameId } = useLocalSearchParams<{ playerName: string, gameId: string }>();
   const [players, setPlayers] = useState<string[]>([playerName || 'Player 1']);
+  const [isHost, setIsHost] = useState(false);
+
+  const serverUrl = 'wss://mobilewordguess.onrender.com'; // Replace with your actual WebSocket server URL
+
+  useEffect(() => {
+    const ws = new WebSocket(serverUrl);
+    
+    ws.onopen = () => {
+      console.log('WebSocket connection established');
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.action === 'player_joined') {
+        setPlayers(prevPlayers => [...prevPlayers, data.playerName]);
+      } else if (data.action === 'game_start') {
+        router.push('/multi-player-game');
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      Alert.alert('Error', 'Lost connection to the game server.');
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, []);
 
   const startGame = () => {
-    // Implement game start logic here
-    router.push('/multi-player-game');
+    if (isHost) {
+      const ws = new WebSocket(serverUrl);
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ action: 'start_game', gameId }));
+      };
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.mainHeader}>Hello {playerName}</Text>
+      <Text style={styles.mainHeader}>Game Lobby</Text>
       
       <View style={styles.gameIdContainer}>
         <Text style={styles.gameIdLabel}>Game ID:</Text>
@@ -33,11 +66,11 @@ export default function GameLobby() {
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.button, players.length < 2 && styles.buttonDisabled]}
+          style={[styles.button, (!isHost || players.length < 2) && styles.buttonDisabled]}
           onPress={startGame}
-          disabled={players.length < 2}
+          disabled={!isHost || players.length < 2}
         >
-          <Text style={styles.buttonText}>Start Game</Text>
+          <Text style={styles.buttonText}>{isHost ? 'Start Game' : 'Waiting for host to start...'}</Text>
         </TouchableOpacity>
       </View>
     </View>

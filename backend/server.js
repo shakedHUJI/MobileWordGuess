@@ -233,7 +233,36 @@ wss.on("connection", (ws) => {
       ws.gameId = gameId;
       ws.send(JSON.stringify({ action: "game_created", gameId, playerName: data.playerName }));
     } else if (data.action === "join_game") {
-      // ... (existing join game logic)
+      const { gameId, playerName } = data;
+      if (games[gameId]) {
+        if (games[gameId].players.length < 2) {
+          games[gameId].players.push({ name: playerName, ws });
+          ws.gameId = gameId;
+          ws.send(JSON.stringify({ 
+            action: "join_game_response", 
+            success: true, 
+            gameId, 
+            playerName 
+          }));
+          // Notify the other player that someone has joined
+          games[gameId].players[0].ws.send(JSON.stringify({
+            action: "player_joined",
+            playerName
+          }));
+        } else {
+          ws.send(JSON.stringify({ 
+            action: "join_game_response", 
+            success: false, 
+            message: "Game is full" 
+          }));
+        }
+      } else {
+        ws.send(JSON.stringify({ 
+          action: "join_game_response", 
+          success: false, 
+          message: "Game not found" 
+        }));
+      }
     }
   });
 

@@ -77,7 +77,10 @@ export default function MultiPlayerSelection() {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
-            onPress={() => router.push('/join-game')}
+            onPress={() => router.push({
+              pathname: '/join-multi-player-game',
+              params: { playerName: playerName.trim() }
+            })}
           >
             <Text style={styles.buttonText}>Join Game</Text>
           </TouchableOpacity>
