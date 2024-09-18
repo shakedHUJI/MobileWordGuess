@@ -210,31 +210,27 @@ function broadcastGameState(gameId, data) {
   });
 }
 
-// WebSocket setup for multiplayer
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+// Add this function to generate a unique game ID
+function generateUniqueGameId() {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
 
+// Modify the WebSocket connection handler
 wss.on("connection", (ws) => {
   ws.on("message", (message) => {
-    const { gameId, playerName } = JSON.parse(message);
-    ws.gameId = gameId;
-    const game = games[gameId];
-
-    if (!game) {
+    const data = JSON.parse(message);
+    
+    if (data.action === "create_game") {
+      const gameId = generateUniqueGameId();
       games[gameId] = {
-        players: [{ name: playerName, ws }],
+        players: [{ name: data.playerName, ws }],
         secretWord: loadRandomWord(),
         currentTurn: 0,
       };
-    } else if (game.players.length < 2) {
-      game.players.push({ name: playerName, ws });
-
-      broadcastGameState(gameId, {
-        message: "Both players have joined. Let's start the game!",
-        currentPlayer: game.players[game.currentTurn].name,
-      });
-    } else {
-      ws.send(JSON.stringify({ error: "Game is full" }));
+      ws.gameId = gameId;
+      ws.send(JSON.stringify({ action: "game_created", gameId, playerName: data.playerName }));
+    } else if (data.action === "join_game") {
+      // ... (existing join game logic)
     }
   });
 

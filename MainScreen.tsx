@@ -19,7 +19,7 @@ export default function MainScreen({ navigation }: { navigation: any }) {  retur
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
-            onPress={() => navigation.navigate('MultiPlayerGame')}
+            onPress={() => navigation.navigate('MultiPlayerSelection')}
           >
             <Text style={styles.buttonText}>2-Player</Text>
           </TouchableOpacity>

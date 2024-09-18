@@ -161,6 +161,29 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  gameIdContainer: {
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  gameIdLabel: {
+    fontSize: 18,
+    color: textColor,
+  },
+  gameId: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: primaryColor,
+    marginTop: 10,
+  },
+  playersListContainer: {
+    width: '80%',
+    marginVertical: 20,
+  },
+  playerItem: {
+    fontSize: 18,
+    color: textColor,
+    marginVertical: 5,
+  },
 });
 
 export default styles;
