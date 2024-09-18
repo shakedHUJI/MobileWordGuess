@@ -338,6 +338,12 @@ wss.on("connection", (ws) => {
       if (games[gameId].players.length === 0) {
         console.log(`No players left, deleting game ${gameId}`);
         delete games[gameId]; // Delete the game if no players are left
+      } else {
+        // Notify remaining players that a player has left
+        broadcastGameState(gameId, {
+          action: "player_left",
+          players: games[gameId].players.map((p) => p.name),
+        });
       }
       logGames();
     }

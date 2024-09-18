@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
 import styles from '../styles/styles';
 import { useRouter } from 'expo-router';
@@ -6,46 +6,54 @@ import { useRouter } from 'expo-router';
 export default function MultiPlayerSelection() {
   const router = useRouter();
   const [playerName, setPlayerName] = useState<string>('');
-  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   const serverUrl = 'wss://mobilewordguess.onrender.com'; // Replace with your actual WebSocket server URL
 
   useEffect(() => {
-    const ws = new WebSocket(serverUrl);
+    const connectWebSocket = () => {
+      wsRef.current = new WebSocket(serverUrl);
     
-    ws.onopen = () => {
-      console.log('WebSocket connection established');
-      setSocket(ws);
+      wsRef.current.onopen = () => {
+        console.log('WebSocket connection established');
+      };
+
+      wsRef.current.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.action === 'game_created') {
+          router.push({
+            pathname: '/game-lobby',
+            params: { playerName: data.playerName, gameId: data.gameId, players: JSON.stringify([data.playerName]), isHost: 'true' }
+          });
+        }
+      };
+
+      wsRef.current.onclose = () => {
+        console.log('WebSocket connection closed. Attempting to reconnect...');
+        setTimeout(connectWebSocket, 3000);
+      };
+
+      wsRef.current.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        Alert.alert('Error', 'Failed to connect to the game server.');
+      };
     };
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.action === 'game_created') {
-        router.push({
-          pathname: '/game-lobby',
-          params: { playerName: data.playerName, gameId: data.gameId }
-        });
-      }
-    };
-
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      Alert.alert('Error', 'Failed to connect to the game server.');
-    };
+    connectWebSocket();
 
     return () => {
-      if (ws) {
-        ws.close();
+      if (wsRef.current) {
+        wsRef.current.close();
       }
     };
   }, []);
 
   const createGame = () => {
     if (playerName.trim()) {
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ action: 'create_game', playerName: playerName.trim() }));
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ action: 'create_game', playerName: playerName.trim() }));
       } else {
-        Alert.alert('Error', 'Not connected to the game server.');
+        Alert.alert('Error', 'Not connected to the game server. Please try again.');
       }
     } else {
       Alert.alert('Error', 'Please enter your name');
