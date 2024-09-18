@@ -9,6 +9,9 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
 const port = process.env.PORT || 3000;
 
 // Initialize OpenAI
