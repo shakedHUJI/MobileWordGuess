@@ -224,7 +224,7 @@ wss.on("connection", (ws) => {
 
   ws.on("message", (message) => {
     console.log("Received WebSocket message:", message);
-    console.log("Games before message handling:", games); // Log all games for context
+    console.log("Current games:", Object.keys(games)); // Log all current game IDs
 
     const data = JSON.parse(message);
 
@@ -248,6 +248,7 @@ wss.on("connection", (ws) => {
     } else if (data.action === "join_game") {
       const { gameId, playerName } = data;
       console.log(`Player ${playerName} attempting to join game ${gameId}`);
+      console.log("Available games:", Object.keys(games));
 
       if (games[gameId]) {
         if (games[gameId].players.length < 2) {
@@ -282,6 +283,7 @@ wss.on("connection", (ws) => {
           );
         }
       } else {
+        console.log(`Game ${gameId} not found. Available games:`, Object.keys(games));
         ws.send(
           JSON.stringify({
             action: "join_game_response",
@@ -289,7 +291,6 @@ wss.on("connection", (ws) => {
             message: "Game not found",
           })
         );
-        console.log(`Game ${gameId} not found for player ${playerName}`);
       }
     } else if (data.action === "join_lobby") {
       const { gameId, playerName } = data;

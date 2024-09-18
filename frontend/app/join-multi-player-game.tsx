@@ -70,7 +70,7 @@ const JoinMultiPlayerGame = () => {
   };
 
   const joinGame = () => {
-    const fullGameId = gameId.join('');
+    const fullGameId = gameId.join('').toUpperCase();
     if (fullGameId.length === 6 && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       setIsJoining(true);
       wsRef.current.send(JSON.stringify({ action: 'join_game', gameId: fullGameId, playerName }));
