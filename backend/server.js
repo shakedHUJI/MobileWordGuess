@@ -242,13 +242,15 @@ wss.on("connection", (ws) => {
             action: "join_game_response", 
             success: true, 
             gameId, 
-            playerName 
+            playerName,
+            players: games[gameId].players.map(p => p.name),
+            isHost: games[gameId].players.length === 1
           }));
-          // Notify the other player that someone has joined
-          games[gameId].players[0].ws.send(JSON.stringify({
+          // Notify all players in the game
+          broadcastGameState(gameId, {
             action: "player_joined",
-            playerName
-          }));
+            players: games[gameId].players.map(p => p.name)
+          });
         } else {
           ws.send(JSON.stringify({ 
             action: "join_game_response", 
@@ -262,6 +264,15 @@ wss.on("connection", (ws) => {
           success: false, 
           message: "Game not found" 
         }));
+      }
+    } else if (data.action === "join_lobby") {
+      const { gameId, playerName } = data;
+      if (games[gameId]) {
+        ws.gameId = gameId;
+        broadcastGameState(gameId, {
+          action: "player_joined",
+          players: games[gameId].players.map(p => p.name)
+        });
       }
     }
   });

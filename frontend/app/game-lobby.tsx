@@ -5,23 +5,29 @@ import styles from '../styles/styles';
 
 export default function GameLobby() {
   const router = useRouter();
-  const { playerName, gameId } = useLocalSearchParams<{ playerName: string, gameId: string }>();
-  const [players, setPlayers] = useState<string[]>([playerName || 'Player 1']);
-  const [isHost, setIsHost] = useState(false);
+  const { playerName, gameId, players: initialPlayers, isHost: initialIsHost } = useLocalSearchParams<{ 
+    playerName: string, 
+    gameId: string, 
+    players: string,
+    isHost: string
+  }>();
+  const [players, setPlayers] = useState<string[]>(JSON.parse(initialPlayers || '[]'));
+  const [isHost, setIsHost] = useState(initialIsHost === 'true');
 
-  const serverUrl = 'wss://mobilewordguess.onrender.com'; // Replace with your actual WebSocket server URL
+  const serverUrl = 'wss://mobilewordguess.onrender.com';
 
   useEffect(() => {
     const ws = new WebSocket(serverUrl);
     
     ws.onopen = () => {
       console.log('WebSocket connection established');
+      ws.send(JSON.stringify({ action: 'join_lobby', gameId, playerName }));
     };
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.action === 'player_joined') {
-        setPlayers(prevPlayers => [...prevPlayers, data.playerName]);
+        setPlayers(data.players);
       } else if (data.action === 'game_start') {
         router.push('/multi-player-game');
       }

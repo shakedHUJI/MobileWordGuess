@@ -9,23 +9,30 @@ const JoinMultiPlayerGame = () => {
   const [gameId, setGameId] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const [isJoining, setIsJoining] = useState(false);
+  const [ws, setWs] = useState<WebSocket | null>(null);
   const serverUrl = 'wss://mobilewordguess.onrender.com'; // Replace with your actual WebSocket server URL
 
   useEffect(() => {
-    const ws = new WebSocket(serverUrl);
+    const newWs = new WebSocket(serverUrl);
     
-    ws.onopen = () => {
+    newWs.onopen = () => {
       console.log('WebSocket connection established');
+      setWs(newWs);
     };
 
-    ws.onmessage = (event) => {
+    newWs.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.action === 'join_game_response') {
         setIsJoining(false);
         if (data.success) {
           router.push({
             pathname: '/game-lobby',
-            params: { playerName, gameId: data.gameId }
+            params: { 
+              playerName, 
+              gameId: data.gameId,
+              players: JSON.stringify(data.players),
+              isHost: data.isHost
+            }
           });
         } else {
           Alert.alert('Error', data.message || 'Failed to join the game.');
@@ -33,14 +40,14 @@ const JoinMultiPlayerGame = () => {
       }
     };
 
-    ws.onerror = (error) => {
+    newWs.onerror = (error) => {
       console.error('WebSocket error:', error);
       setIsJoining(false);
       Alert.alert('Error', 'Failed to connect to the game server.');
     };
 
     return () => {
-      ws.close();
+      newWs.close();
     };
   }, []);
 
@@ -62,14 +69,13 @@ const JoinMultiPlayerGame = () => {
 
   const joinGame = () => {
     const fullGameId = gameId.join('');
-    if (fullGameId.length === 6) {
+    if (fullGameId.length === 6 && ws && ws.readyState === WebSocket.OPEN) {
       setIsJoining(true);
-      const ws = new WebSocket(serverUrl);
-      ws.onopen = () => {
-        ws.send(JSON.stringify({ action: 'join_game', gameId: fullGameId, playerName }));
-      };
-    } else {
+      ws.send(JSON.stringify({ action: 'join_game', gameId: fullGameId, playerName }));
+    } else if (fullGameId.length !== 6) {
       Alert.alert('Error', 'Please enter a complete 6-character Game ID');
+    } else {
+      Alert.alert('Error', 'WebSocket is not connected. Please try again.');
     }
   };
 
