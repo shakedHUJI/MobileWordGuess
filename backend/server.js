@@ -242,6 +242,13 @@ wss.on("connection", (ws) => {
       );
     } else if (data.action === "join_game") {
       const { gameId, playerName } = data;
+      console.log("Joining game:", data);
+      console.log("Games:", games);
+      console.log("gameId:", gameId);
+      console.log("playerName:", playerName);
+      console.log("games[gameId]:", games[gameId]);
+      console.log("games[gameId].players:", games[gameId].players);
+      
       if (games[gameId]) {
         if (games[gameId].players.length < 2) {
           games[gameId].players.push({ name: playerName, ws });
