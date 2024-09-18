@@ -220,9 +220,12 @@ function generateUniqueGameId() {
 
 // Modify the WebSocket connection handler
 wss.on("connection", (ws) => {
+  console.log("New WebSocket connection established");
+
   ws.on("message", (message) => {
-    // print all the games
-    console.log("Games:", games);
+    console.log("Received WebSocket message:", message);
+    console.log("Games before message handling:", games); // Log all games for context
+
     const data = JSON.parse(message);
 
     if (data.action === "create_game") {
@@ -233,6 +236,8 @@ wss.on("connection", (ws) => {
         currentTurn: 0,
       };
       ws.gameId = gameId;
+      console.log(`Game created: ${gameId} by player: ${data.playerName}`); // Log game creation
+
       ws.send(
         JSON.stringify({
           action: "game_created",
@@ -242,17 +247,14 @@ wss.on("connection", (ws) => {
       );
     } else if (data.action === "join_game") {
       const { gameId, playerName } = data;
-      console.log("Joining game:", data);
-      console.log("Games:", games);
-      console.log("gameId:", gameId);
-      console.log("playerName:", playerName);
-      console.log("games[gameId]:", games[gameId]);
-      console.log("games[gameId].players:", games[gameId].players);
-      
+      console.log(`Player ${playerName} attempting to join game ${gameId}`);
+
       if (games[gameId]) {
         if (games[gameId].players.length < 2) {
           games[gameId].players.push({ name: playerName, ws });
           ws.gameId = gameId;
+          console.log(`Player ${playerName} joined game ${gameId}`); // Log successful join
+
           ws.send(
             JSON.stringify({
               action: "join_game_response",
@@ -263,7 +265,6 @@ wss.on("connection", (ws) => {
               isHost: games[gameId].players.length === 1,
             })
           );
-          // Notify all players in the game
           broadcastGameState(gameId, {
             action: "player_joined",
             players: games[gameId].players.map((p) => p.name),
@@ -276,6 +277,9 @@ wss.on("connection", (ws) => {
               message: "Game is full",
             })
           );
+          console.log(
+            `Game ${gameId} is full, player ${playerName} cannot join`
+          );
         }
       } else {
         ws.send(
@@ -285,9 +289,11 @@ wss.on("connection", (ws) => {
             message: "Game not found",
           })
         );
+        console.log(`Game ${gameId} not found for player ${playerName}`);
       }
     } else if (data.action === "join_lobby") {
       const { gameId, playerName } = data;
+      console.log(`Player ${playerName} joining lobby for game ${gameId}`);
       if (games[gameId]) {
         ws.gameId = gameId;
         broadcastGameState(gameId, {
@@ -300,11 +306,13 @@ wss.on("connection", (ws) => {
 
   ws.on("close", () => {
     const gameId = ws.gameId;
+    console.log(`WebSocket connection closed for game ${gameId}`);
     if (games[gameId]) {
       games[gameId].players = games[gameId].players.filter(
         (player) => player.ws !== ws
       );
       if (games[gameId].players.length === 0) {
+        console.log(`No players left, deleting game ${gameId}`);
         delete games[gameId]; // Delete the game if no players are left
       }
     }
