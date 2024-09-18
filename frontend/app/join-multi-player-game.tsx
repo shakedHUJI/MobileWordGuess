@@ -9,19 +9,19 @@ const JoinMultiPlayerGame = () => {
   const [gameId, setGameId] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const [isJoining, setIsJoining] = useState(false);
-  const [ws, setWs] = useState<WebSocket | null>(null);
-  const serverUrl = 'wss://mobilewordguess.onrender.com'; // Replace with your actual WebSocket server URL
+  const serverUrl = 'wss://mobilewordguess.onrender.com';
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const newWs = new WebSocket(serverUrl);
+    wsRef.current = new WebSocket(serverUrl);
     
-    newWs.onopen = () => {
+    wsRef.current.onopen = () => {
       console.log('WebSocket connection established');
-      setWs(newWs);
     };
 
-    newWs.onmessage = (event) => {
+    wsRef.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
+      console.log('Received message:', data);
       if (data.action === 'join_game_response') {
         setIsJoining(false);
         if (data.success) {
@@ -31,7 +31,7 @@ const JoinMultiPlayerGame = () => {
               playerName, 
               gameId: data.gameId,
               players: JSON.stringify(data.players),
-              isHost: data.isHost
+              isHost: data.isHost.toString()
             }
           });
         } else {
@@ -40,14 +40,16 @@ const JoinMultiPlayerGame = () => {
       }
     };
 
-    newWs.onerror = (error) => {
+    wsRef.current.onerror = (error) => {
       console.error('WebSocket error:', error);
       setIsJoining(false);
       Alert.alert('Error', 'Failed to connect to the game server.');
     };
 
     return () => {
-      newWs.close();
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
     };
   }, []);
 
@@ -69,9 +71,9 @@ const JoinMultiPlayerGame = () => {
 
   const joinGame = () => {
     const fullGameId = gameId.join('');
-    if (fullGameId.length === 6 && ws && ws.readyState === WebSocket.OPEN) {
+    if (fullGameId.length === 6 && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       setIsJoining(true);
-      ws.send(JSON.stringify({ action: 'join_game', gameId: fullGameId, playerName }));
+      wsRef.current.send(JSON.stringify({ action: 'join_game', gameId: fullGameId, playerName }));
     } else if (fullGameId.length !== 6) {
       Alert.alert('Error', 'Please enter a complete 6-character Game ID');
     } else {

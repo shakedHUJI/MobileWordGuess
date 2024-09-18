@@ -105,6 +105,8 @@ function handleSinglePlayerGuess(sessionId, userGuess, res) {
 // Function to handle multiplayer guesses
 function handleMultiPlayerGuess(gameId, playerName, userGuess, res) {
   const game = games[gameId];
+  // print all the games
+  console.log("Games:", games);
 
   if (!game) {
     return res.status(404).json({ error: "Game not found" });
@@ -222,7 +224,7 @@ function generateUniqueGameId() {
 wss.on("connection", (ws) => {
   ws.on("message", (message) => {
     const data = JSON.parse(message);
-    
+
     if (data.action === "create_game") {
       const gameId = generateUniqueGameId();
       games[gameId] = {
@@ -231,39 +233,51 @@ wss.on("connection", (ws) => {
         currentTurn: 0,
       };
       ws.gameId = gameId;
-      ws.send(JSON.stringify({ action: "game_created", gameId, playerName: data.playerName }));
+      ws.send(
+        JSON.stringify({
+          action: "game_created",
+          gameId,
+          playerName: data.playerName,
+        })
+      );
     } else if (data.action === "join_game") {
       const { gameId, playerName } = data;
       if (games[gameId]) {
         if (games[gameId].players.length < 2) {
           games[gameId].players.push({ name: playerName, ws });
           ws.gameId = gameId;
-          ws.send(JSON.stringify({ 
-            action: "join_game_response", 
-            success: true, 
-            gameId, 
-            playerName,
-            players: games[gameId].players.map(p => p.name),
-            isHost: games[gameId].players.length === 1
-          }));
+          ws.send(
+            JSON.stringify({
+              action: "join_game_response",
+              success: true,
+              gameId,
+              playerName,
+              players: games[gameId].players.map((p) => p.name),
+              isHost: games[gameId].players.length === 1,
+            })
+          );
           // Notify all players in the game
           broadcastGameState(gameId, {
             action: "player_joined",
-            players: games[gameId].players.map(p => p.name)
+            players: games[gameId].players.map((p) => p.name),
           });
         } else {
-          ws.send(JSON.stringify({ 
-            action: "join_game_response", 
-            success: false, 
-            message: "Game is full" 
-          }));
+          ws.send(
+            JSON.stringify({
+              action: "join_game_response",
+              success: false,
+              message: "Game is full",
+            })
+          );
         }
       } else {
-        ws.send(JSON.stringify({ 
-          action: "join_game_response", 
-          success: false, 
-          message: "Game not found" 
-        }));
+        ws.send(
+          JSON.stringify({
+            action: "join_game_response",
+            success: false,
+            message: "Game not found",
+          })
+        );
       }
     } else if (data.action === "join_lobby") {
       const { gameId, playerName } = data;
@@ -271,7 +285,7 @@ wss.on("connection", (ws) => {
         ws.gameId = gameId;
         broadcastGameState(gameId, {
           action: "player_joined",
-          players: games[gameId].players.map(p => p.name)
+          players: games[gameId].players.map((p) => p.name),
         });
       }
     }
