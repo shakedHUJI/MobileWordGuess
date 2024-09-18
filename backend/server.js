@@ -218,90 +218,113 @@ function generateUniqueGameId() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
+// Add this function at the top of your file
+function logGames() {
+  console.log("Current games:", JSON.stringify(Object.keys(games)));
+  Object.entries(games).forEach(([gameId, game]) => {
+    console.log(
+      `Game ${gameId}:`,
+      JSON.stringify({
+        players: game.players.map((p) => p.name),
+        secretWord: game.secretWord,
+        currentTurn: game.currentTurn,
+      })
+    );
+  });
+}
+
 // Modify the WebSocket connection handler
 wss.on("connection", (ws) => {
   console.log("New WebSocket connection established");
 
   ws.on("message", (message) => {
-    console.log("Received WebSocket message:", message);
-    console.log("Current games:", Object.keys(games)); // Log all current game IDs
+    console.log("Received WebSocket message:", message.toString());
 
-    const data = JSON.parse(message);
+    try {
+      const data = JSON.parse(message);
+      console.log("Parsed message data:", JSON.stringify(data));
 
-    if (data.action === "create_game") {
-      const gameId = generateUniqueGameId();
-      games[gameId] = {
-        players: [{ name: data.playerName, ws }],
-        secretWord: loadRandomWord(),
-        currentTurn: 0,
-      };
-      ws.gameId = gameId;
-      console.log(`Game created: ${gameId} by player: ${data.playerName}`); // Log game creation
+      if (data.action === "create_game") {
+        const gameId = generateUniqueGameId();
+        games[gameId] = {
+          players: [{ name: data.playerName, ws }],
+          secretWord: loadRandomWord(),
+          currentTurn: 0,
+        };
+        ws.gameId = gameId;
+        console.log(`Game created: ${gameId} by player: ${data.playerName}`);
+        logGames();
 
-      ws.send(
-        JSON.stringify({
-          action: "game_created",
-          gameId,
-          playerName: data.playerName,
-        })
-      );
-    } else if (data.action === "join_game") {
-      const { gameId, playerName } = data;
-      console.log(`Player ${playerName} attempting to join game ${gameId}`);
-      console.log("Available games:", Object.keys(games));
+        ws.send(
+          JSON.stringify({
+            action: "game_created",
+            gameId,
+            playerName: data.playerName,
+          })
+        );
+      } else if (data.action === "join_game") {
+        const { gameId, playerName } = data;
+        console.log(`Player ${playerName} attempting to join game ${gameId}`);
+        logGames();
 
-      if (games[gameId]) {
-        if (games[gameId].players.length < 2) {
-          games[gameId].players.push({ name: playerName, ws });
-          ws.gameId = gameId;
-          console.log(`Player ${playerName} joined game ${gameId}`); // Log successful join
+        if (games[gameId]) {
+          if (games[gameId].players.length < 2) {
+            games[gameId].players.push({ name: playerName, ws });
+            ws.gameId = gameId;
+            console.log(`Player ${playerName} joined game ${gameId}`);
+            logGames();
 
-          ws.send(
-            JSON.stringify({
-              action: "join_game_response",
-              success: true,
-              gameId,
-              playerName,
+            ws.send(
+              JSON.stringify({
+                action: "join_game_response",
+                success: true,
+                gameId,
+                playerName,
+                players: games[gameId].players.map((p) => p.name),
+                isHost: games[gameId].players.length === 1,
+              })
+            );
+            broadcastGameState(gameId, {
+              action: "player_joined",
               players: games[gameId].players.map((p) => p.name),
-              isHost: games[gameId].players.length === 1,
-            })
-          );
-          broadcastGameState(gameId, {
-            action: "player_joined",
-            players: games[gameId].players.map((p) => p.name),
-          });
+            });
+          } else {
+            ws.send(
+              JSON.stringify({
+                action: "join_game_response",
+                success: false,
+                message: "Game is full",
+              })
+            );
+            console.log(
+              `Game ${gameId} is full, player ${playerName} cannot join`
+            );
+          }
         } else {
+          console.log(`Game ${gameId} not found.`);
+          logGames();
           ws.send(
             JSON.stringify({
               action: "join_game_response",
               success: false,
-              message: "Game is full",
+              message: "Game not found",
             })
           );
-          console.log(
-            `Game ${gameId} is full, player ${playerName} cannot join`
-          );
         }
-      } else {
-        console.log(`Game ${gameId} not found. Available games:`, Object.keys(games));
-        ws.send(
-          JSON.stringify({
-            action: "join_game_response",
-            success: false,
-            message: "Game not found",
-          })
-        );
+      } else if (data.action === "join_lobby") {
+        const { gameId, playerName } = data;
+        console.log(`Player ${playerName} joining lobby for game ${gameId}`);
+        if (games[gameId]) {
+          ws.gameId = gameId;
+          broadcastGameState(gameId, {
+            action: "player_joined",
+            players: games[gameId].players.map((p) => p.name),
+          });
+        }
+        logGames();
       }
-    } else if (data.action === "join_lobby") {
-      const { gameId, playerName } = data;
-      console.log(`Player ${playerName} joining lobby for game ${gameId}`);
-      if (games[gameId]) {
-        ws.gameId = gameId;
-        broadcastGameState(gameId, {
-          action: "player_joined",
-          players: games[gameId].players.map((p) => p.name),
-        });
-      }
+    } catch (error) {
+      console.error("Error processing WebSocket message:", error);
     }
   });
 
@@ -316,6 +339,7 @@ wss.on("connection", (ws) => {
         console.log(`No players left, deleting game ${gameId}`);
         delete games[gameId]; // Delete the game if no players are left
       }
+      logGames();
     }
   });
 });
