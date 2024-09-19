@@ -132,7 +132,8 @@ function handleMultiPlayerGuess(gameId, playerName, userGuess, ws) {
       player: playerName,
       guess: userGuess,
       response: "Congratulations! You've guessed the secret word!",
-      emoji: "🥳",
+      winnerEmoji: "🥳",
+      loserEmoji: "🫠",
       currentPlayer: game.players[game.currentTurn].name, // Notify whose turn is next
     });
   } else {
