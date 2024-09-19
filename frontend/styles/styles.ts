@@ -83,6 +83,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: backgroundColor,
+    justifyContent: 'space-between', // This will push the button to the bottom
   },
   historyItem: {
     marginVertical: 5,
@@ -140,27 +141,31 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginVertical: 10,
-    width: '80%',
+    width: '100%',
+    alignItems: 'center',
   },
   historyButtonContainer: {
     marginTop: 10,
-    width: '80%',
-    alignSelf: 'center',
+    width: '100%',
+    alignItems: 'center',
   },
   button: {
     backgroundColor: primaryColor,
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
+    width: '80%', // Set a fixed width for all buttons
+    maxWidth: 300, // Limit maximum width for larger screens
   },
   buttonDisabled: {
     backgroundColor: '#555',
     opacity: 0.5,
   },
   buttonText: {
-    color: '#FFFFFF',  // Changed to white
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   gameIdContainer: {
     alignItems: 'center',
