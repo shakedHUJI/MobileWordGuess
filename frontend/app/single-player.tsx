@@ -10,6 +10,7 @@ import {
   Alert,
   Modal,
   FlatList,
+  ActivityIndicator
 } from 'react-native';
 import styles from '../styles/styles';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -33,6 +34,7 @@ export default function SinglePlayerGame() {
   const [isSideMenuVisible, setIsSideMenuVisible] = useState<boolean>(false);
   const [emojiBackground, setEmojiBackground] = useState<boolean>(false);
   const [userGuessDisplay, setUserGuessDisplay] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const confettiRef = useRef<any>(null);
 
@@ -45,6 +47,7 @@ export default function SinglePlayerGame() {
   const handleGuessSubmission = async () => {
     if (!userGuess.trim()) return;
 
+    setIsLoading(true);
     setGuessCount(guessCount + 1);
 
     const postData: any = {
@@ -66,6 +69,8 @@ export default function SinglePlayerGame() {
       updateGameUI(data);
     } catch (error) {
       Alert.alert('Error', 'Failed to submit your guess.');
+    } finally {
+      setIsLoading(false);
     }
 
     setUserGuess('');
@@ -195,17 +200,24 @@ export default function SinglePlayerGame() {
               placeholderTextColor="#888"
               value={userGuess}
               onChangeText={setUserGuess}
+              editable={!isLoading}
             />
             <View style={styles.buttonContainer}>
               <TouchableOpacity
-                style={styles.button}
+                style={[styles.button, isLoading && styles.buttonDisabled]}
                 onPress={handleGuessSubmission}
+                disabled={isLoading}
               >
                 <Text style={styles.buttonText}>Submit</Text>
               </TouchableOpacity>
             </View>
             <Text style={styles.guessCounter}>Guesses: {guessCount}</Text>
-            {response ? (
+            {isLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size={70} color="#40798C" />
+                <Text style={styles.loadingText}>Processing your guess...</Text>
+              </View>
+            ) : response ? (
               <ScrollView style={styles.responseContainer}>
                 <Text style={styles.responseText}>
                   <Text style={styles.boldText}>Your Guess:</Text> {userGuessDisplay}

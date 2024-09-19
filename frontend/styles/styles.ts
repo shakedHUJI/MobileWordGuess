@@ -155,6 +155,7 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     backgroundColor: '#555',
+    opacity: 0.5,
   },
   buttonText: {
     color: '#FFFFFF',  // Changed to white
@@ -183,6 +184,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: textColor,
     marginVertical: 5,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    height: 120, // Increased height to accommodate larger spinner
+  },
+  loadingText: {
+    marginTop: 15, // Increased margin to separate text from larger spinner
+    fontSize: 18, // Slightly larger font size
+    color: '#333',
   },
 });
 

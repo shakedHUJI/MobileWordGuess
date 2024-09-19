@@ -9,6 +9,7 @@ import {
   Modal,
   FlatList,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import styles from '../styles/styles';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -34,6 +35,7 @@ export default function MultiPlayerGame() {
   const [guessCount, setGuessCount] = useState<number>(0);
   const [isSideMenuVisible, setIsSideMenuVisible] = useState<boolean>(false);
   const [emojiBackground, setEmojiBackground] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const confettiRef = useRef<any>(null);
   const { ws } = useWebSocket();
@@ -75,25 +77,29 @@ export default function MultiPlayerGame() {
     ]);
 
     setResponse(data.response);
-    setEmoji(data.emoji);
     setGuessCount((prevCount) => prevCount + 1);
     setUserGuess('');
 
     if (data.action === 'correct_guess') {
+      setIsGameOver(true);
       if (data.player === playerName) {
         setIsGameWon(true);
-        setIsGameOver(true);
+        setEmoji(data.winnerEmoji);
         confettiRef.current && confettiRef.current.start();
       } else {
         setIsGameWon(false);
-        setIsGameOver(true);
+        setEmoji(data.loserEmoji);
       }
+    } else {
+      setEmoji(data.emoji);
     }
+    setIsLoading(false);
   };
 
   const handleGuessSubmission = () => {
     if (!userGuess.trim()) return;
 
+    setIsLoading(true);
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         action: 'submit_guess',
@@ -102,6 +108,7 @@ export default function MultiPlayerGame() {
         userGuess: userGuess.trim(),
       }));
     } else {
+      setIsLoading(false);
       Alert.alert('Error', 'WebSocket connection is not open.');
     }
   };
@@ -145,7 +152,7 @@ export default function MultiPlayerGame() {
         {isGameOver ? (
           isGameWon ? (
             <View style={styles.congratsContent}>
-              <Text style={styles.celebrateEmoji}>{emoji || '🥳'}</Text>
+              <Text style={styles.celebrateEmoji}>{emoji}</Text>
               <Text style={styles.congratsMessage}>
                 Congratulations! You've guessed the secret word!
               </Text>
@@ -163,9 +170,9 @@ export default function MultiPlayerGame() {
             </View>
           ) : (
             <View style={styles.congratsContent}>
-              <Text style={styles.celebrateEmoji}>{emoji || '😢'}</Text>
+              <Text style={styles.celebrateEmoji}>{emoji}</Text>
               <Text style={styles.congratsMessage}>
-                You've lost! Better luck next time.
+                Game Over! {currentPlayer} guessed the word.
               </Text>
               <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.button} onPress={resetGameState}>
@@ -191,19 +198,24 @@ export default function MultiPlayerGame() {
               placeholderTextColor="#888"
               value={userGuess}
               onChangeText={setUserGuess}
-              editable={!isSubmitDisabled}
+              editable={!isSubmitDisabled && !isLoading}
             />
             <View style={styles.buttonContainer}>
               <TouchableOpacity
-                style={[styles.button, isSubmitDisabled && styles.buttonDisabled]}
+                style={[styles.button, (isSubmitDisabled || isLoading) && styles.buttonDisabled]}
                 onPress={handleGuessSubmission}
-                disabled={isSubmitDisabled}
+                disabled={isSubmitDisabled || isLoading}
               >
                 <Text style={styles.buttonText}>Submit</Text>
               </TouchableOpacity>
             </View>
             <Text style={styles.guessCounter}>Guesses: {guessCount}</Text>
-            {response ? (
+            {isLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size={70} color="#40798C" />
+                <Text style={styles.loadingText}>Processing your guess...</Text>
+              </View>
+            ) : response ? (
               <ScrollView style={styles.responseContainer}>
                 <Text style={styles.responseText}>
                   <Text style={styles.boldText}>Your Guess:</Text> {userGuess}
