@@ -1,3 +1,5 @@
+// server.js
+
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
@@ -46,6 +48,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 let games = {};
 let sessions = {};
+let clientInfoMap = new Map(); // Map to store client information
 
 // Function to load and select a random word from words.json
 function loadRandomWord() {
@@ -121,8 +124,9 @@ function handleMultiPlayerGuess(gameId, playerName, userGuess, res) {
 
   if (userGuess.toLowerCase() === secretWord.toLowerCase()) {
     game.secretWord = loadRandomWord(); // Generate a new word
-    game.currentTurn = (game.currentTurn + 1) % 2; // Switch turn
+    game.currentTurn = (game.currentTurn + 1) % game.players.length; // Switch turn
     broadcastGameState(gameId, {
+      action: "correct_guess",
       player: playerName,
       guess: userGuess,
       response: "Congratulations! You've guessed the secret word!",
@@ -181,8 +185,9 @@ async function generateResponse(
 
     if (gameId && playerName) {
       const game = games[gameId];
-      game.currentTurn = (game.currentTurn + 1) % 2; // Switch turn
+      game.currentTurn = (game.currentTurn + 1) % game.players.length; // Switch turn
       broadcastGameState(gameId, {
+        action: "game_update",
         player: playerName,
         guess: userGuess,
         response: responseData.response,
@@ -207,18 +212,23 @@ async function generateResponse(
 function broadcastGameState(gameId, data) {
   const game = games[gameId];
   wss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN && client.gameId === gameId) {
+    const clientInfo = clientInfoMap.get(client);
+    if (
+      client.readyState === WebSocket.OPEN &&
+      clientInfo &&
+      clientInfo.gameId === gameId
+    ) {
       client.send(JSON.stringify(data));
     }
   });
 }
 
-// Add this function to generate a unique game ID
+// Function to generate a unique game ID
 function generateUniqueGameId() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
-// Add this function at the top of your file
+// Function to log current games
 function logGames() {
   console.log("Current games:", JSON.stringify(Object.keys(games)));
   Object.entries(games).forEach(([gameId, game]) => {
@@ -233,7 +243,7 @@ function logGames() {
   });
 }
 
-// Modify the WebSocket connection handler
+// WebSocket connection handler
 wss.on("connection", (ws) => {
   console.log("New WebSocket connection established");
 
@@ -251,7 +261,7 @@ wss.on("connection", (ws) => {
           secretWord: loadRandomWord(),
           currentTurn: 0,
         };
-        ws.gameId = gameId;
+        clientInfoMap.set(ws, { gameId, playerName: data.playerName });
         console.log(`Game created: ${gameId} by player: ${data.playerName}`);
         logGames();
 
@@ -270,7 +280,7 @@ wss.on("connection", (ws) => {
         if (games[gameId]) {
           if (games[gameId].players.length < 2) {
             games[gameId].players.push({ name: playerName, ws });
-            ws.gameId = gameId;
+            clientInfoMap.set(ws, { gameId, playerName });
             console.log(`Player ${playerName} joined game ${gameId}`);
             logGames();
 
@@ -315,37 +325,57 @@ wss.on("connection", (ws) => {
         const { gameId, playerName } = data;
         console.log(`Player ${playerName} joining lobby for game ${gameId}`);
         if (games[gameId]) {
-          ws.gameId = gameId;
+          clientInfoMap.set(ws, { gameId, playerName });
           broadcastGameState(gameId, {
             action: "player_joined",
             players: games[gameId].players.map((p) => p.name),
           });
         }
         logGames();
+      } else if (data.action === "start_game") {
+        const { gameId } = data;
+        console.log(`Starting game ${gameId}`);
+        if (games[gameId]) {
+          broadcastGameState(gameId, {
+            action: "game_started",
+            currentPlayer:
+              games[gameId].players[games[gameId].currentTurn].name,
+          });
+        }
       }
+      // Handle other actions as needed
     } catch (error) {
       console.error("Error processing WebSocket message:", error);
     }
   });
 
   ws.on("close", () => {
-    const gameId = ws.gameId;
-    console.log(`WebSocket connection closed for game ${gameId}`);
-    if (games[gameId]) {
-      games[gameId].players = games[gameId].players.filter(
-        (player) => player.ws !== ws
+    const clientInfo = clientInfoMap.get(ws);
+    if (clientInfo) {
+      const { gameId, playerName } = clientInfo;
+      console.log(
+        `WebSocket connection closed for player ${playerName} in game ${gameId}`
       );
-      if (games[gameId].players.length === 0) {
-        console.log(`No players left, deleting game ${gameId}`);
-        // delete games[gameId]; // Delete the game if no players are left
-      } else {
-        // Notify remaining players that a player has left
-        broadcastGameState(gameId, {
-          action: "player_left",
-          players: games[gameId].players.map((p) => p.name),
-        });
+      if (games[gameId]) {
+        games[gameId].players = games[gameId].players.filter(
+          (player) => player.ws !== ws
+        );
+        if (games[gameId].players.length === 0) {
+          console.log(`No players left, deleting game ${gameId}`);
+          delete games[gameId];
+        } else {
+          // Notify remaining players that a player has left
+          broadcastGameState(gameId, {
+            action: "player_left",
+            players: games[gameId].players.map((p) => p.name),
+          });
+        }
+        logGames();
       }
-      logGames();
+      // Remove the client from the clientInfoMap
+      clientInfoMap.delete(ws);
+    } else {
+      console.log("WebSocket connection closed, but no client info found");
     }
   });
 });
