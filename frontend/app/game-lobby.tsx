@@ -1,61 +1,69 @@
+// GameLobby.tsx
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import styles from '../styles/styles';
+import { useWebSocket } from './WebSocketProvider';
 
 export default function GameLobby() {
   const router = useRouter();
-  const { playerName, gameId, players: initialPlayers, isHost: initialIsHost } = useLocalSearchParams<{ 
-    playerName: string, 
-    gameId: string, 
-    players: string,
-    isHost: string
+  const {
+    playerName,
+    gameId,
+    players: initialPlayers,
+    isHost: initialIsHost,
+  } = useLocalSearchParams<{
+    playerName: string;
+    gameId: string;
+    players: string;
+    isHost: string;
   }>();
-  const [players, setPlayers] = useState<string[]>(JSON.parse(initialPlayers || '[]'));
+  const [players, setPlayers] = useState<string[]>(
+    JSON.parse(initialPlayers || '[]')
+  );
   const [isHost, setIsHost] = useState(initialIsHost === 'true');
-
-  const serverUrl = 'wss://mobilewordguess.onrender.com';
+  const { ws } = useWebSocket();
 
   useEffect(() => {
-    const ws = new WebSocket(serverUrl);
-    
-    ws.onopen = () => {
-      console.log('WebSocket connection established');
+    if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ action: 'join_lobby', gameId, playerName }));
-    };
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.action === 'player_joined') {
-        setPlayers(data.players);
-      } else if (data.action === 'game_start') {
-        router.push('/multi-player-game');
-      }
-    };
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.action === 'player_joined') {
+          setPlayers(data.players);
+        } else if (data.action === 'game_start') {
+          router.push('/multi-player-game');
+        } else if (data.action === 'player_left') {
+          setPlayers(data.players);
+        }
+      };
 
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      Alert.alert('Error', 'Lost connection to the game server.');
-    };
-
-    return () => {
-      ws.close();
-    };
-  }, []);
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        Alert.alert('Error', 'Lost connection to the game server.');
+      };
+    }
+  }, [ws]);
 
   const startGame = () => {
     if (isHost) {
-      const ws = new WebSocket(serverUrl);
-      ws.onopen = () => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ action: 'start_game', gameId }));
-      };
+      } else {
+        Alert.alert(
+          'Error',
+          'Not connected to the game server. Please try again.'
+        );
+      }
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.mainHeader}>Game Lobby</Text>
-      
+
       <View style={styles.gameIdContainer}>
         <Text style={styles.gameIdLabel}>Game ID:</Text>
         <Text style={styles.gameId}>{gameId}</Text>
@@ -65,18 +73,25 @@ export default function GameLobby() {
         <Text style={styles.heading}>Players:</Text>
         <FlatList
           data={players}
-          renderItem={({ item }) => <Text style={styles.playerItem}>{item}</Text>}
+          renderItem={({ item }) => (
+            <Text style={styles.playerItem}>{item}</Text>
+          )}
           keyExtractor={(item, index) => index.toString()}
         />
       </View>
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.button, (!isHost || players.length < 2) && styles.buttonDisabled]}
+          style={[
+            styles.button,
+            (!isHost || players.length < 2) && styles.buttonDisabled,
+          ]}
           onPress={startGame}
           disabled={!isHost || players.length < 2}
         >
-          <Text style={styles.buttonText}>{isHost ? 'Start Game' : 'Waiting for host to start...'}</Text>
+          <Text style={styles.buttonText}>
+            {isHost ? 'Start Game' : 'Waiting for host to start...'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>

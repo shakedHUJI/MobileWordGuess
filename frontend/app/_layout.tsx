@@ -2,11 +2,14 @@
 import { Slot } from 'expo-router';
 import { View } from 'react-native';
 import styles from '../styles/styles';
+import { WebSocketProvider } from './WebSocketProvider'; // Adjust the path accordingly
 
 export default function RootLayout() {
   return (
-    <View style={styles.container}>
-      <Slot />
-    </View>
+    <WebSocketProvider>
+      <View style={styles.container}>
+        <Slot />
+      </View>
+    </WebSocketProvider>
   );
 }

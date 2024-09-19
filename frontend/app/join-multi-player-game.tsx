@@ -1,7 +1,17 @@
+// JoinMultiPlayerGame.tsx
+
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import styles from '../styles/styles';
+import { useWebSocket } from './WebSocketProvider';
 
 const JoinMultiPlayerGame = () => {
   const router = useRouter();
@@ -9,49 +19,38 @@ const JoinMultiPlayerGame = () => {
   const [gameId, setGameId] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const [isJoining, setIsJoining] = useState(false);
-  const serverUrl = 'wss://mobilewordguess.onrender.com';
-  const wsRef = useRef<WebSocket | null>(null);
+  const { ws } = useWebSocket();
 
   useEffect(() => {
-    wsRef.current = new WebSocket(serverUrl);
-    
-    wsRef.current.onopen = () => {
-      console.log('WebSocket connection established');
-    };
-
-    wsRef.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log('Received message:', data);
-      if (data.action === 'join_game_response') {
-        setIsJoining(false);
-        if (data.success) {
-          router.push({
-            pathname: '/game-lobby',
-            params: { 
-              playerName, 
-              gameId: data.gameId,
-              players: JSON.stringify(data.players),
-              isHost: data.isHost.toString()
-            }
-          });
-        } else {
-          Alert.alert('Error', data.message || 'Failed to join the game.');
+    if (ws) {
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log('Received message:', data);
+        if (data.action === 'join_game_response') {
+          setIsJoining(false);
+          if (data.success) {
+            router.push({
+              pathname: '/game-lobby',
+              params: {
+                playerName,
+                gameId: data.gameId,
+                players: JSON.stringify(data.players),
+                isHost: data.isHost.toString(),
+              },
+            });
+          } else {
+            Alert.alert('Error', data.message || 'Failed to join the game.');
+          }
         }
-      }
-    };
+      };
 
-    wsRef.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setIsJoining(false);
-      Alert.alert('Error', 'Failed to connect to the game server.');
-    };
-
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-    };
-  }, []);
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setIsJoining(false);
+        Alert.alert('Error', 'Failed to connect to the game server.');
+      };
+    }
+  }, [ws]);
 
   const handleInputChange = (text: string, index: number) => {
     const newGameId = [...gameId];
@@ -71,13 +70,26 @@ const JoinMultiPlayerGame = () => {
 
   const joinGame = () => {
     const fullGameId = gameId.join('').toUpperCase();
-    if (fullGameId.length === 6 && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+    if (
+      fullGameId.length === 6 &&
+      ws &&
+      ws.readyState === WebSocket.OPEN
+    ) {
       setIsJoining(true);
-      wsRef.current.send(JSON.stringify({ action: 'join_game', gameId: fullGameId, playerName }));
+      ws.send(
+        JSON.stringify({
+          action: 'join_game',
+          gameId: fullGameId,
+          playerName,
+        })
+      );
     } else if (fullGameId.length !== 6) {
       Alert.alert('Error', 'Please enter a complete 6-character Game ID');
     } else {
-      Alert.alert('Error', 'WebSocket is not connected. Please try again.');
+      Alert.alert(
+        'Error',
+        'WebSocket is not connected. Please try again.'
+      );
     }
   };
 
@@ -105,12 +117,14 @@ const JoinMultiPlayerGame = () => {
         ))}
       </View>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity 
-          style={[styles.button, isJoining && styles.buttonDisabled]} 
-          onPress={joinGame} 
+        <TouchableOpacity
+          style={[styles.button, isJoining && styles.buttonDisabled]}
+          onPress={joinGame}
           disabled={isJoining}
         >
-          <Text style={styles.buttonText}>{isJoining ? 'Joining...' : 'Join Game!'}</Text>
+          <Text style={styles.buttonText}>
+            {isJoining ? 'Joining...' : 'Join Game!'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
