@@ -106,18 +106,20 @@ function handleSinglePlayerGuess(sessionId, userGuess, res) {
 }
 
 // Function to handle multiplayer guesses
-function handleMultiPlayerGuess(gameId, playerName, userGuess, res) {
+function handleMultiPlayerGuess(gameId, playerName, userGuess, ws) {
   const game = games[gameId];
 
   if (!game) {
-    return res.status(404).json({ error: "Game not found" });
+    ws.send(JSON.stringify({ error: "Game not found" }));
+    return;
   }
 
   const currentTurn = game.currentTurn;
   const currentPlayer = game.players[currentTurn];
 
   if (currentPlayer.name !== playerName) {
-    return res.status(403).json({ error: "Not your turn" });
+    ws.send(JSON.stringify({ error: "Not your turn" }));
+    return;
   }
 
   const secretWord = game.secretWord;
@@ -133,10 +135,9 @@ function handleMultiPlayerGuess(gameId, playerName, userGuess, res) {
       emoji: "🥳",
       currentPlayer: game.players[game.currentTurn].name, // Notify whose turn is next
     });
-    return res.json({ success: true });
+  } else {
+    generateResponse(userGuess, secretWord, null, gameId, playerName);
   }
-
-  generateResponse(userGuess, secretWord, res, gameId, playerName);
 }
 
 // Function to generate a response using the OpenAI API
@@ -194,17 +195,18 @@ async function generateResponse(
         emoji: responseData.emoji,
         currentPlayer: game.players[game.currentTurn].name, // Notify whose turn is next
       });
-      res.json({ success: true });
-    } else {
+    } else if (res) {
       res.json(responseData);
     }
   } catch (error) {
     console.error("Error:", error);
-    res.json({
-      yourGuess: userGuess,
-      response: "Failed to generate a response.",
-      emoji: "",
-    });
+    if (res) {
+      res.json({
+        yourGuess: userGuess,
+        response: "Failed to generate a response.",
+        emoji: "",
+      });
+    }
   }
 }
 
@@ -342,6 +344,9 @@ wss.on("connection", (ws) => {
               games[gameId].players[games[gameId].currentTurn].name,
           });
         }
+      } else if (data.action === "submit_guess") {
+        const { gameId, playerName, userGuess } = data;
+        handleMultiPlayerGuess(gameId, playerName, userGuess, ws);
       }
       // Handle other actions as needed
     } catch (error) {
