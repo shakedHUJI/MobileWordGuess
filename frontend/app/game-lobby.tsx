@@ -33,8 +33,11 @@ export default function GameLobby() {
         const data = JSON.parse(event.data);
         if (data.action === 'player_joined') {
           setPlayers(data.players);
-        } else if (data.action === 'game_start') {
-          router.push('/multi-player-game');
+        } else if (data.action === 'game_started') {
+          router.push({
+            pathname: '/multi-player-game',
+            params: { gameId, playerName },
+          });
         } else if (data.action === 'player_left') {
           setPlayers(data.players);
         }

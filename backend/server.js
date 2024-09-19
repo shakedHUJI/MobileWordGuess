@@ -169,11 +169,11 @@ async function generateResponse(
     // Execute both API requests in parallel using Promise.all
     const [completion, emojiCompletion] = await Promise.all([
       openai.createChatCompletion({
-        model: "gpt-4",
+        model: "gpt-4o-mini",
         messages: [{ role: "system", content: prompt }],
       }),
       openai.createChatCompletion({
-        model: "gpt-4",
+        model: "gpt-4o-mini",
         messages: [{ role: "system", content: promptEmoji }],
       }),
     ]);
