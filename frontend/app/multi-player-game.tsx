@@ -172,7 +172,7 @@ export default function MultiPlayerGame() {
             <View style={styles.congratsContent}>
               <Text style={styles.celebrateEmoji}>{emoji}</Text>
               <Text style={styles.congratsMessage}>
-                Game Over! {currentPlayer} guessed the word.
+                Game Over! {history[history.length - 1].player} guessed the word.
               </Text>
               <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.button} onPress={resetGameState}>
