@@ -263,6 +263,7 @@ wss.on("connection", (ws) => {
           players: [{ name: data.playerName, ws }],
           secretWord: loadRandomWord(),
           currentTurn: null, // Remove the initial turn selection
+          host: data.playerName, // Add host property
         };
         clientInfoMap.set(ws, { gameId, playerName: data.playerName });
         console.log(`Game created: ${gameId} by player: ${data.playerName}`);
@@ -295,7 +296,7 @@ wss.on("connection", (ws) => {
                 gameId,
                 playerName,
                 players: games[gameId].players.map((p) => p.name),
-                isHost: games[gameId].players.length === 1,
+                isHost: games[gameId].host === playerName, // Correct host assignment,
                 startingPlayer:
                   games[gameId].players[games[gameId].currentTurn]?.name ||
                   null, // Send the starting player name if available
@@ -363,6 +364,19 @@ wss.on("connection", (ws) => {
         handleMultiPlayerGuess(gameId, playerName, userGuess, ws);
       }
       // Handle other actions as needed
+      else if (data.action === "play_again") {
+        const { gameId, playerName } = data;
+        const game = games[gameId];
+        if (game) {
+          // Reset the game state
+          game.secretWord = loadRandomWord();
+          game.currentTurn = (game.currentTurn + 1) % game.players.length;
+          broadcastGameState(gameId, {
+            action: "game_reset",
+            currentPlayer: game.players[game.currentTurn].name,
+          });
+        }
+      }
     } catch (error) {
       console.error("Error processing WebSocket message:", error);
     }
