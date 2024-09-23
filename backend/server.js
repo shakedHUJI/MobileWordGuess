@@ -259,10 +259,11 @@ wss.on("connection", (ws) => {
 
       if (data.action === "create_game") {
         const gameId = generateUniqueGameId();
+        const startingPlayerIndex = Math.floor(Math.random() * 2); // Randomly select starting player index (0 or 1)
         games[gameId] = {
           players: [{ name: data.playerName, ws }],
           secretWord: loadRandomWord(),
-          currentTurn: 0,
+          currentTurn: startingPlayerIndex,
         };
         clientInfoMap.set(ws, { gameId, playerName: data.playerName });
         console.log(`Game created: ${gameId} by player: ${data.playerName}`);
@@ -273,6 +274,7 @@ wss.on("connection", (ws) => {
             action: "game_created",
             gameId,
             playerName: data.playerName,
+            startingPlayer: data.playerName, // Send the starting player name
           })
         );
       } else if (data.action === "join_game") {
@@ -295,11 +297,13 @@ wss.on("connection", (ws) => {
                 playerName,
                 players: games[gameId].players.map((p) => p.name),
                 isHost: games[gameId].players.length === 1,
+                startingPlayer: games[gameId].players[games[gameId].currentTurn].name, // Send the starting player name
               })
             );
             broadcastGameState(gameId, {
               action: "player_joined",
               players: games[gameId].players.map((p) => p.name),
+              startingPlayer: games[gameId].players[games[gameId].currentTurn].name, // Broadcast the starting player name
             });
           } else {
             ws.send(
@@ -332,6 +336,7 @@ wss.on("connection", (ws) => {
           broadcastGameState(gameId, {
             action: "player_joined",
             players: games[gameId].players.map((p) => p.name),
+            startingPlayer: games[gameId].players[games[gameId].currentTurn].name, // Broadcast the starting player name
           });
         }
         logGames();
