@@ -259,11 +259,10 @@ wss.on("connection", (ws) => {
 
       if (data.action === "create_game") {
         const gameId = generateUniqueGameId();
-        const startingPlayerIndex = 0;
         games[gameId] = {
           players: [{ name: data.playerName, ws }],
           secretWord: loadRandomWord(),
-          currentTurn: startingPlayerIndex,
+          currentTurn: null, // Remove the initial turn selection
         };
         clientInfoMap.set(ws, { gameId, playerName: data.playerName });
         console.log(`Game created: ${gameId} by player: ${data.playerName}`);
@@ -298,14 +297,15 @@ wss.on("connection", (ws) => {
                 players: games[gameId].players.map((p) => p.name),
                 isHost: games[gameId].players.length === 1,
                 startingPlayer:
-                  games[gameId].players[games[gameId].currentTurn].name, // Send the starting player name
+                  games[gameId].players[games[gameId].currentTurn]?.name ||
+                  null, // Send the starting player name if available
               })
             );
             broadcastGameState(gameId, {
               action: "player_joined",
               players: games[gameId].players.map((p) => p.name),
               startingPlayer:
-                games[gameId].players[games[gameId].currentTurn].name, // Broadcast the starting player name
+                games[gameId].players[games[gameId].currentTurn]?.name || null, // Broadcast the starting player name if available
             });
           } else {
             ws.send(
@@ -339,7 +339,7 @@ wss.on("connection", (ws) => {
             action: "player_joined",
             players: games[gameId].players.map((p) => p.name),
             startingPlayer:
-              games[gameId].players[games[gameId].currentTurn].name, // Broadcast the starting player name
+              games[gameId].players[games[gameId].currentTurn]?.name || null, // Broadcast the starting player name if available
           });
         }
         logGames();
@@ -347,10 +347,15 @@ wss.on("connection", (ws) => {
         const { gameId } = data;
         console.log(`Starting game ${gameId}`);
         if (games[gameId]) {
+          // Randomly select the current player
+          const randomIndex = Math.floor(
+            Math.random() * games[gameId].players.length
+          );
+          games[gameId].currentTurn = randomIndex;
+
           broadcastGameState(gameId, {
             action: "game_started",
-            currentPlayer:
-              games[gameId].players[games[gameId].currentTurn].name,
+            currentPlayer: games[gameId].players[randomIndex].name,
           });
         }
       } else if (data.action === "submit_guess") {
