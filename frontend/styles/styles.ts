@@ -236,6 +236,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
   },
+  firstGuessMessage: {
+    fontSize: 18,
+    color: secondaryColor,
+    marginVertical: 10,
+    textAlign: 'center',
+  },
 });
 
 export default styles;

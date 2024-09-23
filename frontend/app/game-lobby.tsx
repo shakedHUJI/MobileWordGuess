@@ -36,7 +36,7 @@ export default function GameLobby() {
         } else if (data.action === 'game_started') {
           router.push({
             pathname: '/multi-player-game',
-            params: { gameId, playerName },
+            params: { gameId, playerName, currentPlayer: data.currentPlayer },
           });
         } else if (data.action === 'player_left') {
           setPlayers(data.players);

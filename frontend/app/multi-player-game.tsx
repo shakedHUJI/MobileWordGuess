@@ -20,11 +20,11 @@ const { width, height } = Dimensions.get('window');
 
 export default function MultiPlayerGame() {
   const router = useRouter();
-  const { gameId, playerName } = useLocalSearchParams<{ gameId: string; playerName: string }>();
-  const [currentPlayer, setCurrentPlayer] = useState<string>('');
-  const [turnIndicator, setTurnIndicator] = useState<string>('');
+  const { gameId, playerName, currentPlayer: initialCurrentPlayer } = useLocalSearchParams<{ gameId: string; playerName: string; currentPlayer: string }>();
+  const [currentPlayer, setCurrentPlayer] = useState<string>(initialCurrentPlayer);
+  const [turnIndicator, setTurnIndicator] = useState<string>(initialCurrentPlayer === playerName ? "It's your turn!" : `It's ${initialCurrentPlayer}'s turn.`);
   const [userGuess, setUserGuess] = useState<string>('');
-  const [isSubmitDisabled, setIsSubmitDisabled] = useState<boolean>(false);
+  const [isSubmitDisabled, setIsSubmitDisabled] = useState<boolean>(initialCurrentPlayer !== playerName);
   const [response, setResponse] = useState<string>('');
   const [emoji, setEmoji] = useState<string>('');
   const [history, setHistory] = useState<
@@ -36,6 +36,7 @@ export default function MultiPlayerGame() {
   const [isSideMenuVisible, setIsSideMenuVisible] = useState<boolean>(false);
   const [emojiBackground, setEmojiBackground] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showFirstGuessMessage, setShowFirstGuessMessage] = useState<boolean>(true);
 
   const confettiRef = useRef<any>(null);
   const { ws } = useWebSocket();
@@ -85,6 +86,7 @@ export default function MultiPlayerGame() {
     setResponse(data.response);
     setGuessCount((prevCount) => prevCount + 1);
     setUserGuess('');
+    setShowFirstGuessMessage(false); // Hide the message after the first guess
 
     if (data.action === 'correct_guess') {
       setIsGameOver(true);
@@ -129,6 +131,7 @@ export default function MultiPlayerGame() {
     setEmoji('');
     setIsSubmitDisabled(false);
     setEmojiBackground(false);
+    setShowFirstGuessMessage(true); // Reset the message visibility
 
     if (ws) {
       ws.close();
@@ -198,6 +201,9 @@ export default function MultiPlayerGame() {
             {turnIndicator ? (
               <Text style={styles.turnIndicator}>{turnIndicator}</Text>
             ) : null}
+            {showFirstGuessMessage && (
+              <Text style={styles.firstGuessMessage}>Be the first to guess!</Text>
+            )}
             <TextInput
               style={styles.input}
               placeholder="Enter your guess"
