@@ -71,32 +71,6 @@ export default function MultiPlayerGame() {
       setTurnIndicator(data.startingPlayer === playerName ? "It's your turn!" : `It's ${data.startingPlayer}'s turn.`);
       setIsSubmitDisabled(data.startingPlayer !== playerName);
     }
-      else if (data.action === 'game_reset') {
-      // Reset the game state
-      setIsGameWon(false);
-      setIsGameOver(false);
-      setResponse('');
-      setUserGuess('');
-      setGuessCount(0);
-      setHistory([]);
-      setEmoji('');
-      setIsSubmitDisabled(data.currentPlayer !== playerName);
-      setTurnIndicator(data.currentPlayer === playerName ? "It's your turn!" : `It's ${data.currentPlayer}'s turn.`);
-    }
-    else if (data.action === 'return_to_lobby') {
-      // Determine if current player is host
-      const isHost = data.host === playerName;
-      // Navigate back to game lobby
-      router.push({
-        pathname: '/game-lobby',
-        params: {
-          gameId,
-          playerName,
-          players: JSON.stringify(data.players),
-          isHost: isHost.toString(),
-        },
-      });
-    }
   };
 
   const updateGameUI = (data: any) => {
@@ -148,7 +122,6 @@ export default function MultiPlayerGame() {
   };
 
   const resetGameState = () => {
-    // Reset local game state variables
     setIsGameWon(false);
     setIsGameOver(false);
     setResponse('');
@@ -158,20 +131,14 @@ export default function MultiPlayerGame() {
     setEmoji('');
     setIsSubmitDisabled(false);
     setEmojiBackground(false);
-    setShowFirstGuessMessage(true);
-    // Send 'play_again' action to the server
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        action: 'play_again',
-        gameId,
-        playerName,
-      }));
-    } else {
-      Alert.alert('Error', 'WebSocket connection is not open.');
-      router.push('/');
+    setShowFirstGuessMessage(true); // Reset the message visibility
+
+    if (ws) {
+      ws.close();
     }
+    router.push('/');
   };
-  
+
   return (
     <View style={styles.container}>
       {emojiBackground && (
@@ -260,10 +227,10 @@ export default function MultiPlayerGame() {
                 <ActivityIndicator size={70} color="#40798C" />
                 <Text style={styles.loadingText}>Processing your guess...</Text>
               </View>
-            ) : response ? (
+            ) : response && history.length > 0 ? (
               <ScrollView style={styles.responseContainer}>
                 <Text style={styles.responseText}>
-                  <Text style={styles.boldText}>Your Guess:</Text> {userGuess}
+                  <Text style={styles.boldText}>{history[history.length - 1].player}'s Guess:</Text> {history[history.length - 1].guess}
                 </Text>
                 <Text style={styles.responseText}>
                   <Text style={styles.boldText}>Response:</Text> {response}

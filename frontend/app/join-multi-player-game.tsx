@@ -39,7 +39,7 @@ const JoinMultiPlayerGame = () => {
               },
             });
           } else {
-            Alert.alert('Error', data.message || 'Failed to join the game.');
+            // Alert.alert('Error', data.message || 'Failed to join the game.');
           }
         }
       };
@@ -54,11 +54,35 @@ const JoinMultiPlayerGame = () => {
 
   const handleInputChange = (text: string, index: number) => {
     const newGameId = [...gameId];
-    newGameId[index] = text.toUpperCase();
-    setGameId(newGameId);
-
-    if (text && index < 5) {
-      inputRefs.current[index + 1]?.focus();
+    const uppercaseText = text.toUpperCase();
+    
+    // Handle pasting
+    if (uppercaseText.length > 1) {
+      const pastedChars = uppercaseText.split('').slice(0, 6);
+      for (let i = 0; i < pastedChars.length; i++) {
+        if (index + i < 6) {
+          newGameId[index + i] = pastedChars[i];
+        }
+      }
+      setGameId(newGameId);
+      // Focus on the last filled input or the last input
+      const lastFilledIndex = Math.min(index + pastedChars.length - 1, 5);
+      inputRefs.current[lastFilledIndex]?.focus();
+      
+      // If all 6 characters are filled, join the game
+      if (newGameId.every(char => char !== '')) {
+        joinGame(newGameId.join(''));
+      }
+    } else {
+      // Handle single character input
+      newGameId[index] = uppercaseText;
+      setGameId(newGameId);
+      if (uppercaseText && index < 5) {
+        inputRefs.current[index + 1]?.focus();
+      } else if (index === 5 && uppercaseText) {
+        // If the 6th character is entered, join the game
+        joinGame(newGameId.join(''));
+      }
     }
   };
 
@@ -68,12 +92,12 @@ const JoinMultiPlayerGame = () => {
     }
   };
 
-  const joinGame = () => {
-    const fullGameId = gameId.join('').toUpperCase();
+  const joinGame = (fullGameId: string) => {
     if (
       fullGameId.length === 6 &&
       ws &&
-      ws.readyState === WebSocket.OPEN
+      ws.readyState === WebSocket.OPEN &&
+      !isJoining
     ) {
       setIsJoining(true);
       ws.send(
@@ -85,6 +109,8 @@ const JoinMultiPlayerGame = () => {
       );
     } else if (fullGameId.length !== 6) {
       Alert.alert('Error', 'Please enter a complete 6-character Game ID');
+    } else if (isJoining) {
+      // Do nothing if already joining
     } else {
       Alert.alert(
         'Error',
@@ -105,7 +131,7 @@ const JoinMultiPlayerGame = () => {
             style={localStyles.input}
             value={char}
             onChangeText={(text) => handleInputChange(text, index)}
-            maxLength={1}
+            maxLength={6} // Allow pasting up to 6 characters
             keyboardType="default"
             autoCapitalize="characters"
             onKeyPress={({ nativeEvent }) => {
@@ -119,11 +145,11 @@ const JoinMultiPlayerGame = () => {
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, isJoining && styles.buttonDisabled]}
-          onPress={joinGame}
+          onPress={() => joinGame(gameId.join(''))}
           disabled={isJoining}
         >
           <Text style={styles.buttonText}>
-            {isJoining ? 'Joining...' : 'Join Game!'}
+            {isJoining ? 'Joining...' : 'Join Game'}
           </Text>
         </TouchableOpacity>
       </View>
