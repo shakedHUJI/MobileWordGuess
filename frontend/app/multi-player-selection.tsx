@@ -1,15 +1,18 @@
 // MultiPlayerSelection.tsx
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Alert, Platform } from 'react-native';
 import styles from '../styles/styles';
 import { useRouter } from 'expo-router';
 import { useWebSocket } from './WebSocketProvider';
+import WebAlert from '../components/WebAlert';
 
 export default function MultiPlayerSelection() {
   const router = useRouter();
   const [playerName, setPlayerName] = useState<string>('');
   const { ws, isConnected } = useWebSocket();
+  const [webAlertVisible, setWebAlertVisible] = useState(false);
+  const [webAlertMessage, setWebAlertMessage] = useState('');
 
   useEffect(() => {
     if (isConnected && ws) {
@@ -30,6 +33,15 @@ export default function MultiPlayerSelection() {
     }
   }, [isConnected, ws]);
 
+  const showAlert = (message: string) => {
+    if (Platform.OS === 'web') {
+      setWebAlertMessage(message);
+      setWebAlertVisible(true);
+    } else {
+      Alert.alert('Error', message);
+    }
+  };
+
   const createGame = () => {
     if (playerName.trim()) {
       if (isConnected && ws) {
@@ -40,13 +52,21 @@ export default function MultiPlayerSelection() {
           })
         );
       } else {
-        Alert.alert(
-          'Error',
-          'Not connected to the game server. Please try again.'
-        );
+        showAlert('Not connected to the game server. Please try again.');
       }
     } else {
-      Alert.alert('Error', 'Please enter your name');
+      showAlert('Enter you name dummy!');
+    }
+  };
+
+  const joinGame = () => {
+    if (playerName.trim()) {
+      router.push({
+        pathname: '/join-multi-player-game',
+        params: { playerName: playerName.trim() },
+      });
+    } else {
+      showAlert('Enter you name dummy!');
     }
   };
 
@@ -72,17 +92,21 @@ export default function MultiPlayerSelection() {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
-            onPress={() =>
-              router.push({
-                pathname: '/join-multi-player-game',
-                params: { playerName: playerName.trim() },
-              })
-            }
+            onPress={joinGame}
           >
             <Text style={styles.buttonText}>Join Game</Text>
           </TouchableOpacity>
         </View>
       </View>
+
+      {Platform.OS === 'web' && (
+        <WebAlert
+          visible={webAlertVisible}
+          title="Error"
+          message={webAlertMessage}
+          onClose={() => setWebAlertVisible(false)}
+        />
+      )}
     </View>
   );
 }

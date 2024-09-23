@@ -201,6 +201,41 @@ const styles = StyleSheet.create({
     fontSize: 18, // Slightly larger font size
     color: '#333',
   },
+  overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  alertBox: {
+    width: 300,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  alertTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: textColor,
+  },
+  alertMessage: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: textColor,
+  },
+  alertButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: primaryColor,
+    borderRadius: 5,
+  },
+  alertButtonText: {
+    color: 'white',
+    fontSize: 16,
+  },
 });
 
 export default styles;
