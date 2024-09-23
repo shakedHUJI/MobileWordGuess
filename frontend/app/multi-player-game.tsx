@@ -58,11 +58,17 @@ export default function MultiPlayerGame() {
   }, [emoji]);
 
   const handleGameStateUpdate = (data: any) => {
+    console.log('Received WebSocket message:', data); // Add logging
+
     if (data.action === 'game_update' || data.action === 'correct_guess') {
       setCurrentPlayer(data.currentPlayer);
       setTurnIndicator(data.currentPlayer === playerName ? "It's your turn!" : `It's ${data.currentPlayer}'s turn.`);
       setIsSubmitDisabled(data.currentPlayer !== playerName);
       updateGameUI(data);
+    } else if (data.action === 'player_joined' && data.startingPlayer) {
+      setCurrentPlayer(data.startingPlayer);
+      setTurnIndicator(data.startingPlayer === playerName ? "It's your turn!" : `It's ${data.startingPlayer}'s turn.`);
+      setIsSubmitDisabled(data.startingPlayer !== playerName);
     }
   };
 

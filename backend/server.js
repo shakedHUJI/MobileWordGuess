@@ -259,7 +259,7 @@ wss.on("connection", (ws) => {
 
       if (data.action === "create_game") {
         const gameId = generateUniqueGameId();
-        const startingPlayerIndex = Math.floor(Math.random() * 2); // Randomly select starting player index (0 or 1)
+        const startingPlayerIndex = 0;
         games[gameId] = {
           players: [{ name: data.playerName, ws }],
           secretWord: loadRandomWord(),
@@ -297,13 +297,15 @@ wss.on("connection", (ws) => {
                 playerName,
                 players: games[gameId].players.map((p) => p.name),
                 isHost: games[gameId].players.length === 1,
-                startingPlayer: games[gameId].players[games[gameId].currentTurn].name, // Send the starting player name
+                startingPlayer:
+                  games[gameId].players[games[gameId].currentTurn].name, // Send the starting player name
               })
             );
             broadcastGameState(gameId, {
               action: "player_joined",
               players: games[gameId].players.map((p) => p.name),
-              startingPlayer: games[gameId].players[games[gameId].currentTurn].name, // Broadcast the starting player name
+              startingPlayer:
+                games[gameId].players[games[gameId].currentTurn].name, // Broadcast the starting player name
             });
           } else {
             ws.send(
@@ -336,7 +338,8 @@ wss.on("connection", (ws) => {
           broadcastGameState(gameId, {
             action: "player_joined",
             players: games[gameId].players.map((p) => p.name),
-            startingPlayer: games[gameId].players[games[gameId].currentTurn].name, // Broadcast the starting player name
+            startingPlayer:
+              games[gameId].players[games[gameId].currentTurn].name, // Broadcast the starting player name
           });
         }
         logGames();
