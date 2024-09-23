@@ -46,8 +46,10 @@ export default function GameLobby() {
           });
         } else if (data.action === 'player_left') {
           setPlayers(data.players);
-        } else if (data.action === 'game_reset') {
-          // Handle game reset if needed
+        } else if (data.action === 'return_to_lobby') {
+          // Update players list and host status when returning to lobby
+          setPlayers(data.players);
+          setIsHost(data.host === playerName);
         }
       };
 

@@ -83,6 +83,20 @@ export default function MultiPlayerGame() {
       setIsSubmitDisabled(data.currentPlayer !== playerName);
       setTurnIndicator(data.currentPlayer === playerName ? "It's your turn!" : `It's ${data.currentPlayer}'s turn.`);
     }
+    else if (data.action === 'return_to_lobby') {
+      // Determine if current player is host
+      const isHost = data.host === playerName;
+      // Navigate back to game lobby
+      router.push({
+        pathname: '/game-lobby',
+        params: {
+          gameId,
+          playerName,
+          players: JSON.stringify(data.players),
+          isHost: isHost.toString(),
+        },
+      });
+    }
   };
 
   const updateGameUI = (data: any) => {

@@ -368,12 +368,15 @@ wss.on("connection", (ws) => {
         const { gameId, playerName } = data;
         const game = games[gameId];
         if (game) {
-          // Reset the game state
+          // Reset the game state to lobby
           game.secretWord = loadRandomWord();
-          game.currentTurn = (game.currentTurn + 1) % game.players.length;
+          game.currentTurn = null; // Set currentTurn to null to indicate the game hasn't started
+          // Broadcast to all players to return to lobby
           broadcastGameState(gameId, {
-            action: "game_reset",
-            currentPlayer: game.players[game.currentTurn].name,
+            action: "return_to_lobby",
+            message: `${playerName} wants to play again.`,
+            players: game.players.map((p) => p.name),
+            host: game.host,
           });
         }
       }
