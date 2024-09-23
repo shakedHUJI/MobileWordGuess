@@ -27,11 +27,17 @@ export default function GameLobby() {
 
   useEffect(() => {
     if (ws && ws.readyState === WebSocket.OPEN) {
+      // Send a message to join the lobby
       ws.send(JSON.stringify({ action: 'join_lobby', gameId, playerName }));
 
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        if (data.action === 'player_joined') {
+
+        if (data.action === 'join_game_response') {
+          // Update the isHost state based on the server response
+          setIsHost(data.isHost);
+          setPlayers(data.players);
+        } else if (data.action === 'player_joined') {
           setPlayers(data.players);
         } else if (data.action === 'game_started') {
           router.push({
@@ -40,6 +46,8 @@ export default function GameLobby() {
           });
         } else if (data.action === 'player_left') {
           setPlayers(data.players);
+        } else if (data.action === 'game_reset') {
+          // Handle game reset if needed
         }
       };
 
