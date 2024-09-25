@@ -23,7 +23,7 @@ export default function MainScreen() {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
-            onPress={() => router.push('/multi-player')}
+            onPress={() => router.push('/multi-player-selection')}
           >
             <Text style={styles.buttonText}>2-Player</Text>
           </TouchableOpacity>

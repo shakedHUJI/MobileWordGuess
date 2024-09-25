@@ -1,3 +1,5 @@
+// server.js
+
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
@@ -9,6 +11,9 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
 const port = process.env.PORT || 3000;
 
 // Initialize OpenAI
@@ -43,6 +48,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 let games = {};
 let sessions = {};
+let clientInfoMap = new Map(); // Map to store client information
 
 // Function to load and select a random word from words.json
 function loadRandomWord() {
@@ -100,36 +106,39 @@ function handleSinglePlayerGuess(sessionId, userGuess, res) {
 }
 
 // Function to handle multiplayer guesses
-function handleMultiPlayerGuess(gameId, playerName, userGuess, res) {
+function handleMultiPlayerGuess(gameId, playerName, userGuess, ws) {
   const game = games[gameId];
 
   if (!game) {
-    return res.status(404).json({ error: "Game not found" });
+    ws.send(JSON.stringify({ error: "Game not found" }));
+    return;
   }
 
   const currentTurn = game.currentTurn;
   const currentPlayer = game.players[currentTurn];
 
   if (currentPlayer.name !== playerName) {
-    return res.status(403).json({ error: "Not your turn" });
+    ws.send(JSON.stringify({ error: "Not your turn" }));
+    return;
   }
 
   const secretWord = game.secretWord;
 
   if (userGuess.toLowerCase() === secretWord.toLowerCase()) {
     game.secretWord = loadRandomWord(); // Generate a new word
-    game.currentTurn = (game.currentTurn + 1) % 2; // Switch turn
+    game.currentTurn = (game.currentTurn + 1) % game.players.length; // Switch turn
     broadcastGameState(gameId, {
+      action: "correct_guess",
       player: playerName,
       guess: userGuess,
       response: "Congratulations! You've guessed the secret word!",
-      emoji: "🥳",
+      winnerEmoji: "🥳",
+      loserEmoji: "🫠",
       currentPlayer: game.players[game.currentTurn].name, // Notify whose turn is next
     });
-    return res.json({ success: true });
+  } else {
+    generateResponse(userGuess, secretWord, null, gameId, playerName);
   }
-
-  generateResponse(userGuess, secretWord, res, gameId, playerName);
 }
 
 // Function to generate a response using the OpenAI API
@@ -161,11 +170,11 @@ async function generateResponse(
     // Execute both API requests in parallel using Promise.all
     const [completion, emojiCompletion] = await Promise.all([
       openai.createChatCompletion({
-        model: "gpt-4",
+        model: "gpt-4o-mini",
         messages: [{ role: "system", content: prompt }],
       }),
       openai.createChatCompletion({
-        model: "gpt-4",
+        model: "gpt-4o-mini",
         messages: [{ role: "system", content: promptEmoji }],
       }),
     ]);
@@ -178,25 +187,27 @@ async function generateResponse(
 
     if (gameId && playerName) {
       const game = games[gameId];
-      game.currentTurn = (game.currentTurn + 1) % 2; // Switch turn
+      game.currentTurn = (game.currentTurn + 1) % game.players.length; // Switch turn
       broadcastGameState(gameId, {
+        action: "game_update",
         player: playerName,
         guess: userGuess,
         response: responseData.response,
         emoji: responseData.emoji,
         currentPlayer: game.players[game.currentTurn].name, // Notify whose turn is next
       });
-      res.json({ success: true });
-    } else {
+    } else if (res) {
       res.json(responseData);
     }
   } catch (error) {
     console.error("Error:", error);
-    res.json({
-      yourGuess: userGuess,
-      response: "Failed to generate a response.",
-      emoji: "",
-    });
+    if (res) {
+      res.json({
+        yourGuess: userGuess,
+        response: "Failed to generate a response.",
+        emoji: "",
+      });
+    }
   }
 }
 
@@ -204,49 +215,203 @@ async function generateResponse(
 function broadcastGameState(gameId, data) {
   const game = games[gameId];
   wss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN && client.gameId === gameId) {
+    const clientInfo = clientInfoMap.get(client);
+    if (
+      client.readyState === WebSocket.OPEN &&
+      clientInfo &&
+      clientInfo.gameId === gameId
+    ) {
       client.send(JSON.stringify(data));
     }
   });
 }
 
-// WebSocket setup for multiplayer
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+// Function to generate a unique game ID
+function generateUniqueGameId() {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
 
+// Function to log current games
+function logGames() {
+  console.log("Current games:", JSON.stringify(Object.keys(games)));
+  Object.entries(games).forEach(([gameId, game]) => {
+    console.log(
+      `Game ${gameId}:`,
+      JSON.stringify({
+        players: game.players.map((p) => p.name),
+        secretWord: game.secretWord,
+        currentTurn: game.currentTurn,
+      })
+    );
+  });
+}
+
+// WebSocket connection handler
 wss.on("connection", (ws) => {
+  console.log("New WebSocket connection established");
+
   ws.on("message", (message) => {
-    const { gameId, playerName } = JSON.parse(message);
-    ws.gameId = gameId;
-    const game = games[gameId];
+    console.log("Received WebSocket message:", message.toString());
 
-    if (!game) {
-      games[gameId] = {
-        players: [{ name: playerName, ws }],
-        secretWord: loadRandomWord(),
-        currentTurn: 0,
-      };
-    } else if (game.players.length < 2) {
-      game.players.push({ name: playerName, ws });
+    try {
+      const data = JSON.parse(message);
+      console.log("Parsed message data:", JSON.stringify(data));
 
-      broadcastGameState(gameId, {
-        message: "Both players have joined. Let's start the game!",
-        currentPlayer: game.players[game.currentTurn].name,
-      });
-    } else {
-      ws.send(JSON.stringify({ error: "Game is full" }));
+      if (data.action === "create_game") {
+        const gameId = generateUniqueGameId();
+        games[gameId] = {
+          players: [{ name: data.playerName, ws }],
+          secretWord: loadRandomWord(),
+          currentTurn: null, // Remove the initial turn selection
+          host: data.playerName, // Add host property
+        };
+        clientInfoMap.set(ws, { gameId, playerName: data.playerName });
+        console.log(`Game created: ${gameId} by player: ${data.playerName}`);
+        logGames();
+
+        ws.send(
+          JSON.stringify({
+            action: "game_created",
+            gameId,
+            playerName: data.playerName,
+            startingPlayer: data.playerName, // Send the starting player name
+          })
+        );
+      } else if (data.action === "join_game") {
+        const { gameId, playerName } = data;
+        console.log(`Player ${playerName} attempting to join game ${gameId}`);
+        logGames();
+
+        if (games[gameId]) {
+          if (games[gameId].players.length < 2) {
+            games[gameId].players.push({ name: playerName, ws });
+            clientInfoMap.set(ws, { gameId, playerName });
+            console.log(`Player ${playerName} joined game ${gameId}`);
+            logGames();
+
+            ws.send(
+              JSON.stringify({
+                action: "join_game_response",
+                success: true,
+                gameId,
+                playerName,
+                players: games[gameId].players.map((p) => p.name),
+                isHost: games[gameId].host === playerName, // Correct host assignment,
+                startingPlayer:
+                  games[gameId].players[games[gameId].currentTurn]?.name ||
+                  null, // Send the starting player name if available
+              })
+            );
+            broadcastGameState(gameId, {
+              action: "player_joined",
+              players: games[gameId].players.map((p) => p.name),
+              startingPlayer:
+                games[gameId].players[games[gameId].currentTurn]?.name || null, // Broadcast the starting player name if available
+            });
+          } else {
+            ws.send(
+              JSON.stringify({
+                action: "join_game_response",
+                success: false,
+                message: "Game is full",
+              })
+            );
+            console.log(
+              `Game ${gameId} is full, player ${playerName} cannot join`
+            );
+          }
+        } else {
+          console.log(`Game ${gameId} not found.`);
+          logGames();
+          ws.send(
+            JSON.stringify({
+              action: "join_game_response",
+              success: false,
+              message: "Game not found",
+            })
+          );
+        }
+      } else if (data.action === "join_lobby") {
+        const { gameId, playerName } = data;
+        console.log(`Player ${playerName} joining lobby for game ${gameId}`);
+        if (games[gameId]) {
+          clientInfoMap.set(ws, { gameId, playerName });
+          broadcastGameState(gameId, {
+            action: "player_joined",
+            players: games[gameId].players.map((p) => p.name),
+            startingPlayer:
+              games[gameId].players[games[gameId].currentTurn]?.name || null, // Broadcast the starting player name if available
+          });
+        }
+        logGames();
+      } else if (data.action === "start_game") {
+        const { gameId } = data;
+        console.log(`Starting game ${gameId}`);
+        if (games[gameId]) {
+          // Randomly select the current player
+          const randomIndex = Math.floor(
+            Math.random() * games[gameId].players.length
+          );
+          games[gameId].currentTurn = randomIndex;
+
+          broadcastGameState(gameId, {
+            action: "game_started",
+            currentPlayer: games[gameId].players[randomIndex].name,
+          });
+        }
+      } else if (data.action === "submit_guess") {
+        const { gameId, playerName, userGuess } = data;
+        handleMultiPlayerGuess(gameId, playerName, userGuess, ws);
+      }
+      // Handle other actions as needed
+      else if (data.action === "play_again") {
+        const { gameId, playerName } = data;
+        const game = games[gameId];
+        if (game) {
+          // Reset the game state to lobby
+          game.secretWord = loadRandomWord();
+          game.currentTurn = null; // Set currentTurn to null to indicate the game hasn't started
+          // Broadcast to all players to return to lobby
+          broadcastGameState(gameId, {
+            action: "return_to_lobby",
+            message: `${playerName} wants to play again.`,
+            players: game.players.map((p) => p.name),
+            host: game.host,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error processing WebSocket message:", error);
     }
   });
 
   ws.on("close", () => {
-    const gameId = ws.gameId;
-    if (games[gameId]) {
-      games[gameId].players = games[gameId].players.filter(
-        (player) => player.ws !== ws
+    const clientInfo = clientInfoMap.get(ws);
+    if (clientInfo) {
+      const { gameId, playerName } = clientInfo;
+      console.log(
+        `WebSocket connection closed for player ${playerName} in game ${gameId}`
       );
-      if (games[gameId].players.length === 0) {
-        delete games[gameId]; // Delete the game if no players are left
+      if (games[gameId]) {
+        games[gameId].players = games[gameId].players.filter(
+          (player) => player.ws !== ws
+        );
+        if (games[gameId].players.length === 0) {
+          console.log(`No players left, deleting game ${gameId}`);
+          delete games[gameId];
+        } else {
+          // Notify remaining players that a player has left
+          broadcastGameState(gameId, {
+            action: "player_left",
+            players: games[gameId].players.map((p) => p.name),
+          });
+        }
+        logGames();
       }
+      // Remove the client from the clientInfoMap
+      clientInfoMap.delete(ws);
+    } else {
+      console.log("WebSocket connection closed, but no client info found");
     }
   });
 });

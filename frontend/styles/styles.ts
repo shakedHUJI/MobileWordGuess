@@ -83,6 +83,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: backgroundColor,
+    justifyContent: 'space-between', // This will push the button to the bottom
   },
   historyItem: {
     marginVertical: 5,
@@ -140,26 +141,106 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginVertical: 10,
-    width: '80%',
+    width: '100%',
+    alignItems: 'center',
   },
   historyButtonContainer: {
     marginTop: 10,
-    width: '80%',
-    alignSelf: 'center',
+    width: '100%',
+    alignItems: 'center',
   },
   button: {
     backgroundColor: primaryColor,
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
+    width: '80%', // Set a fixed width for all buttons
+    maxWidth: 300, // Limit maximum width for larger screens
   },
   buttonDisabled: {
     backgroundColor: '#555',
+    opacity: 0.5,
   },
   buttonText: {
-    color: '#FFFFFF',  // Changed to white
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  gameIdContainer: {
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  gameIdLabel: {
+    fontSize: 18,
+    color: textColor,
+  },
+  gameId: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: primaryColor,
+    marginTop: 10,
+  },
+  playersListContainer: {
+    width: '80%',
+    marginVertical: 20,
+  },
+  playerItem: {
+    fontSize: 18,
+    color: textColor,
+    marginVertical: 5,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    height: 120, // Increased height to accommodate larger spinner
+  },
+  loadingText: {
+    marginTop: 15, // Increased margin to separate text from larger spinner
+    fontSize: 18, // Slightly larger font size
+    color: '#333',
+  },
+  overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  alertBox: {
+    width: 300,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  alertTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: textColor,
+  },
+  alertMessage: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: textColor,
+  },
+  alertButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: primaryColor,
+    borderRadius: 5,
+  },
+  alertButtonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  firstGuessMessage: {
+    fontSize: 18,
+    color: secondaryColor,
+    marginVertical: 10,
+    textAlign: 'center',
   },
 });
 

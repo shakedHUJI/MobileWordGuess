@@ -1,128 +1,54 @@
-// app/single-player.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Text,
   View,
+  Text,
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Dimensions,
   Alert,
   Modal,
   FlatList,
-  ActivityIndicator
+  Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import styles from '../styles/styles';
 import ConfettiCannon from 'react-native-confetti-cannon';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useWebSocket } from './WebSocketProvider';
 
 const { width, height } = Dimensions.get('window');
 
-export default function SinglePlayerGame() {
+export default function MultiPlayerGame() {
   const router = useRouter();
-  const [sessionId, setSessionId] = useState<string>(generateSessionId());
-  const [guessCount, setGuessCount] = useState<number>(0);
+  const { gameId, playerName, currentPlayer: initialCurrentPlayer } = useLocalSearchParams<{ gameId: string; playerName: string; currentPlayer: string }>();
+  const [currentPlayer, setCurrentPlayer] = useState<string>(initialCurrentPlayer);
+  const [turnIndicator, setTurnIndicator] = useState<string>(initialCurrentPlayer === playerName ? "It's your turn!" : `It's ${initialCurrentPlayer}'s turn.`);
   const [userGuess, setUserGuess] = useState<string>('');
+  const [isSubmitDisabled, setIsSubmitDisabled] = useState<boolean>(initialCurrentPlayer !== playerName);
   const [response, setResponse] = useState<string>('');
   const [emoji, setEmoji] = useState<string>('');
   const [history, setHistory] = useState<
-    { guess: string; response: string }[]
+    { player?: string; guess: string; response: string }[]
   >([]);
   const [isGameWon, setIsGameWon] = useState<boolean>(false);
   const [isGameOver, setIsGameOver] = useState<boolean>(false);
-  const [feedbackMessage, setFeedbackMessage] = useState<string>('');
+  const [guessCount, setGuessCount] = useState<number>(0);
   const [isSideMenuVisible, setIsSideMenuVisible] = useState<boolean>(false);
   const [emojiBackground, setEmojiBackground] = useState<boolean>(false);
-  const [userGuessDisplay, setUserGuessDisplay] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showFirstGuessMessage, setShowFirstGuessMessage] = useState<boolean>(true);
 
   const confettiRef = useRef<any>(null);
+  const { ws } = useWebSocket();
 
-  const serverUrl = 'https://mobilewordguess.onrender.com';
-
-  function generateSessionId() {
-    return '_' + Math.random().toString(36).substr(2, 9);
-  }
-
-  const handleGuessSubmission = async () => {
-    if (!userGuess.trim()) return;
-
-    setIsLoading(true);
-    setGuessCount(guessCount + 1);
-
-    const postData: any = {
-      userGuess: userGuess.trim(),
-      mode: 'single',
-      sessionId: sessionId,
-    };
-
-    try {
-      const response = await fetch(`${serverUrl}/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams(postData).toString(),
-      });
-
-      const data = await response.json();
-      updateGameUI(data);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to submit your guess.');
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (ws) {
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        handleGameStateUpdate(data);
+      };
     }
-
-    setUserGuess('');
-  };
-
-  const updateGameUI = (data: any) => {
-    setHistory((prevHistory) => [
-      ...prevHistory,
-      {
-        guess: data.yourGuess || userGuess,
-        response: data.response,
-      },
-    ]);
-
-    setResponse(data.response);
-    setEmoji(data.emoji);
-    setUserGuessDisplay(userGuess);
-
-    if (data.response && data.response.includes('Congratulations!')) {
-      setIsGameWon(true);
-      setIsGameOver(true);
-      confettiRef.current && confettiRef.current.start();
-    }
-  };
-
-  const resetGameState = () => {
-    setIsGameWon(false);
-    setIsGameOver(false);
-    setResponse('');
-    setUserGuess('');
-    setUserGuessDisplay('');
-    setGuessCount(0);
-    setHistory([]);
-    setSessionId(generateSessionId());
-    setEmoji('');
-    setFeedbackMessage('');
-    setEmojiBackground(false);
-
-    fetch(`${serverUrl}/generate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        mode: 'single',
-        sessionId: sessionId,
-        generateNewWord: 'true',
-      }).toString(),
-    }).catch(() => {
-      Alert.alert('Error', 'Failed to reset the game.');
-    });
-  };
+  }, [ws]);
 
   useEffect(() => {
     if (emoji) {
@@ -132,6 +58,120 @@ export default function SinglePlayerGame() {
     }
   }, [emoji]);
 
+  const handleGameStateUpdate = (data: any) => {
+    console.log('Received WebSocket message:', data); // Add logging
+
+    if (data.action === 'game_update' || data.action === 'correct_guess') {
+      setCurrentPlayer(data.currentPlayer);
+      setTurnIndicator(data.currentPlayer === playerName ? "It's your turn!" : `It's ${data.currentPlayer}'s turn.`);
+      setIsSubmitDisabled(data.currentPlayer !== playerName);
+      updateGameUI(data);
+    } else if (data.action === 'player_joined' && data.startingPlayer) {
+      setCurrentPlayer(data.startingPlayer);
+      setTurnIndicator(data.startingPlayer === playerName ? "It's your turn!" : `It's ${data.startingPlayer}'s turn.`);
+      setIsSubmitDisabled(data.startingPlayer !== playerName);
+    }
+      else if (data.action === 'game_reset') {
+      // Reset the game state
+      setIsGameWon(false);
+      setIsGameOver(false);
+      setResponse('');
+      setUserGuess('');
+      setGuessCount(0);
+      setHistory([]);
+      setEmoji('');
+      setIsSubmitDisabled(data.currentPlayer !== playerName);
+      setTurnIndicator(data.currentPlayer === playerName ? "It's your turn!" : `It's ${data.currentPlayer}'s turn.`);
+    }
+    else if (data.action === 'return_to_lobby') {
+      // Determine if current player is host
+      const isHost = data.host === playerName;
+      // Navigate back to game lobby
+      router.push({
+        pathname: '/game-lobby',
+        params: {
+          gameId,
+          playerName,
+          players: JSON.stringify(data.players),
+          isHost: isHost.toString(),
+        },
+      });
+    }
+  };
+
+  const updateGameUI = (data: any) => {
+    setHistory((prevHistory) => [
+      ...prevHistory,
+      {
+        player: data.player,
+        guess: data.guess,
+        response: data.response,
+      },
+    ]);
+
+    setResponse(data.response);
+    setGuessCount((prevCount) => prevCount + 1);
+    setUserGuess('');
+    setShowFirstGuessMessage(false); // Hide the message after the first guess
+
+    if (data.action === 'correct_guess') {
+      setIsGameOver(true);
+      if (data.player === playerName) {
+        setIsGameWon(true);
+        setEmoji(data.winnerEmoji);
+        confettiRef.current && confettiRef.current.start();
+      } else {
+        setIsGameWon(false);
+        setEmoji(data.loserEmoji);
+      }
+    } else {
+      setEmoji(data.emoji);
+    }
+    setIsLoading(false);
+  };
+
+  const handleGuessSubmission = () => {
+    if (!userGuess.trim()) return;
+
+    setIsLoading(true);
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        action: 'submit_guess',
+        gameId,
+        playerName,
+        userGuess: userGuess.trim(),
+      }));
+    } else {
+      setIsLoading(false);
+      Alert.alert('Error', 'WebSocket connection is not open.');
+    }
+  };
+
+  const resetGameState = () => {
+    // Reset local game state variables
+    setIsGameWon(false);
+    setIsGameOver(false);
+    setResponse('');
+    setUserGuess('');
+    setGuessCount(0);
+    setHistory([]);
+    setEmoji('');
+    setIsSubmitDisabled(false);
+    setEmojiBackground(false);
+    setShowFirstGuessMessage(true);
+    // Send 'play_again' action to the server
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        action: 'play_again',
+        gameId,
+        playerName,
+      }));
+    } else {
+      Alert.alert('Error', 'WebSocket connection is not open.');
+      router.push('/');
+    }
+  };
+  
   return (
     <View style={styles.container}>
       {emojiBackground && (
@@ -151,15 +191,12 @@ export default function SinglePlayerGame() {
       <Text style={styles.mainHeader}>Word Guess</Text>
 
       <View style={styles.gameContainer}>
-        {feedbackMessage ? (
-          <Text style={styles.feedbackMessage}>{feedbackMessage}</Text>
-        ) : null}
         {isGameOver ? (
           isGameWon ? (
             <View style={styles.congratsContent}>
-              <Text style={styles.celebrateEmoji}>{emoji || '🥳'}</Text>
+              <Text style={styles.celebrateEmoji}>{emoji}</Text>
               <Text style={styles.congratsMessage}>
-                Congratulations! You've guessed the secret word using {guessCount} guesses!
+                Congratulations! You've guessed the secret word!
               </Text>
               <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.button} onPress={resetGameState}>
@@ -175,9 +212,9 @@ export default function SinglePlayerGame() {
             </View>
           ) : (
             <View style={styles.congratsContent}>
-              <Text style={styles.celebrateEmoji}>{emoji || '😢'}</Text>
+              <Text style={styles.celebrateEmoji}>{emoji}</Text>
               <Text style={styles.congratsMessage}>
-                You've lost! Better luck next time.
+                Game Over! {history[history.length - 1].player} guessed the word.
               </Text>
               <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.button} onPress={resetGameState}>
@@ -194,19 +231,25 @@ export default function SinglePlayerGame() {
           )
         ) : (
           <View style={styles.gameContent}>
+            {turnIndicator ? (
+              <Text style={styles.turnIndicator}>{turnIndicator}</Text>
+            ) : null}
+            {showFirstGuessMessage && (
+              <Text style={styles.firstGuessMessage}>Be the first to guess!</Text>
+            )}
             <TextInput
               style={styles.input}
               placeholder="Enter your guess"
               placeholderTextColor="#888"
               value={userGuess}
               onChangeText={setUserGuess}
-              editable={!isLoading}
+              editable={!isSubmitDisabled && !isLoading}
             />
             <View style={styles.buttonContainer}>
               <TouchableOpacity
-                style={[styles.button, isLoading && styles.buttonDisabled]}
+                style={[styles.button, (isSubmitDisabled || isLoading) && styles.buttonDisabled]}
                 onPress={handleGuessSubmission}
-                disabled={isLoading}
+                disabled={isSubmitDisabled || isLoading}
               >
                 <Text style={styles.buttonText}>Submit</Text>
               </TouchableOpacity>
@@ -216,11 +259,11 @@ export default function SinglePlayerGame() {
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size={70} color="#40798C" />
                 <Text style={styles.loadingText}>Processing your guess...</Text>
-              </View>
-            ) : response ? (
+                </View>
+            ) : response && history.length > 0 ? (
               <ScrollView style={styles.responseContainer}>
                 <Text style={styles.responseText}>
-                  <Text style={styles.boldText}>Your Guess:</Text> {userGuessDisplay}
+                  <Text style={styles.boldText}>{history[history.length - 1].player}'s Guess:</Text> {history[history.length - 1].guess}
                 </Text>
                 <Text style={styles.responseText}>
                   <Text style={styles.boldText}>Response:</Text> {response}
@@ -231,16 +274,18 @@ export default function SinglePlayerGame() {
         )}
       </View>
 
-      <View style={styles.historyButtonContainer}>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => setIsSideMenuVisible(!isSideMenuVisible)}
-        >
-          <Text style={styles.buttonText}>
-            {isSideMenuVisible ? 'Hide Guess History' : 'Show Guess History'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {!isGameOver && (
+        <View style={styles.historyButtonContainer}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => setIsSideMenuVisible(!isSideMenuVisible)}
+          >
+            <Text style={styles.buttonText}>
+              {isSideMenuVisible ? 'Hide Guess History' : 'Show Guess History'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {isGameWon && (
         <ConfettiCannon
@@ -268,7 +313,10 @@ export default function SinglePlayerGame() {
             renderItem={({ item }) => (
               <View style={styles.historyItem}>
                 <Text style={styles.historyText}>
-                  <Text style={styles.boldText}>Your Guess:</Text> {item.guess}
+                  <Text style={styles.boldText}>
+                    {item.player ? `${item.player}'s` : 'Your'} Guess:
+                  </Text>{' '}
+                  {item.guess}
                 </Text>
                 <Text style={styles.historyText}>
                   <Text style={styles.boldText}>Response:</Text> {item.response}
