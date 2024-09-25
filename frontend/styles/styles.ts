@@ -1,3 +1,5 @@
+// styles.ts
+
 import { StyleSheet } from 'react-native';
 
 const primaryColor = '#40798C';
@@ -36,7 +38,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginVertical: 20,
-    color: '#2A4D5D',  // Changed to a darker shade
+    color: '#2A4D5D', // Changed to a darker shade
   },
   modeSelectionContainer: {
     alignItems: 'center',
@@ -83,7 +85,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: backgroundColor,
-    justifyContent: 'space-between', // This will push the button to the bottom
+    justifyContent: 'space-between',
   },
   historyItem: {
     marginVertical: 5,
@@ -107,16 +109,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: secondaryColor,
     fontWeight: 'bold',
-  },
-  responseContainer: {
-    marginTop: 20,
-    width: '80%',
-    maxHeight: 200,
-  },
-  responseText: {
-    fontSize: 16,
-    marginBottom: 10,
-    color: textColor,
   },
   emojiText: {
     fontSize: 50,
@@ -154,8 +146,8 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
-    width: '80%', // Set a fixed width for all buttons
-    maxWidth: 300, // Limit maximum width for larger screens
+    width: '80%',
+    maxWidth: 300,
   },
   buttonDisabled: {
     backgroundColor: '#555',
@@ -194,11 +186,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
-    height: 120, // Increased height to accommodate larger spinner
+    height: 120,
   },
   loadingText: {
-    marginTop: 15, // Increased margin to separate text from larger spinner
-    fontSize: 18, // Slightly larger font size
+    marginTop: 15,
+    fontSize: 18,
     color: '#333',
   },
   overlay: {
@@ -241,6 +233,39 @@ const styles = StyleSheet.create({
     color: secondaryColor,
     marginVertical: 10,
     textAlign: 'center',
+  },
+  // New styles for message bubbles
+  latestMessageContainer: {
+    marginVertical: 10,
+    width: '100%',
+    paddingHorizontal: 10,
+    alignItems: 'center',
+  },
+  guessBubble: {
+    backgroundColor: '#DCF8C6', // Light green for the guess
+    padding: 15,
+    borderRadius: 20,
+    marginBottom: 10,
+    maxWidth: '80%',
+    alignSelf: 'flex-end',
+  },
+  responseBubble: {
+    backgroundColor: '#E1F5FE', // Light blue for the response
+    padding: 15,
+    borderRadius: 20,
+    marginBottom: 10,
+    maxWidth: '80%',
+    alignSelf: 'flex-start',
+  },
+  messageText: {
+    fontSize: 16,
+    color: textColor,
+  },
+  // Keep the messageContainer style for the history modal
+  messageContainer: {
+    marginVertical: 10,
+    width: '100%',
+    paddingHorizontal: 10,
   },
 });
 

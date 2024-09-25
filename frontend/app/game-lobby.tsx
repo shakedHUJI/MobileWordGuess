@@ -1,8 +1,9 @@
 // GameLobby.tsx
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { View, Text, FlatList, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import CustomButton from '../components/CustomButton';
 import styles from '../styles/styles';
 import { useWebSocket } from './WebSocketProvider';
 
@@ -94,7 +95,7 @@ export default function GameLobby() {
       </View>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
+        <CustomButton
           style={[
             styles.button,
             (!isHost || players.length < 2) && styles.buttonDisabled,
@@ -105,7 +106,7 @@ export default function GameLobby() {
           <Text style={styles.buttonText}>
             {isHost ? 'Start Game' : 'Waiting for host to start...'}
           </Text>
-        </TouchableOpacity>
+        </CustomButton>
       </View>
     </View>
   );

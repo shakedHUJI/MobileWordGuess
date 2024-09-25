@@ -1,20 +1,20 @@
-// app/single-player.tsx
+// single-player-game.tsx
+
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Text,
   View,
   TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Dimensions,
   Alert,
   Modal,
   FlatList,
-  ActivityIndicator
+  Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import styles from '../styles/styles';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useRouter } from 'expo-router';
+import CustomButton from '../components/CustomButton';
 
 const { width, height } = Dimensions.get('window');
 
@@ -25,9 +25,7 @@ export default function SinglePlayerGame() {
   const [userGuess, setUserGuess] = useState<string>('');
   const [response, setResponse] = useState<string>('');
   const [emoji, setEmoji] = useState<string>('');
-  const [history, setHistory] = useState<
-    { guess: string; response: string }[]
-  >([]);
+  const [history, setHistory] = useState<{ guess: string; response: string }[]>([]);
   const [isGameWon, setIsGameWon] = useState<boolean>(false);
   const [isGameOver, setIsGameOver] = useState<boolean>(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string>('');
@@ -162,33 +160,25 @@ export default function SinglePlayerGame() {
                 Congratulations! You've guessed the secret word using {guessCount} guesses!
               </Text>
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={resetGameState}>
+                <CustomButton style={styles.button} onPress={resetGameState}>
                   <Text style={styles.buttonText}>Play Again</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={() => router.push('/')}
-                >
+                </CustomButton>
+                <CustomButton style={styles.button} onPress={() => router.push('/')}>
                   <Text style={styles.buttonText}>Back to Main Menu</Text>
-                </TouchableOpacity>
+                </CustomButton>
               </View>
             </View>
           ) : (
             <View style={styles.congratsContent}>
               <Text style={styles.celebrateEmoji}>{emoji || '😢'}</Text>
-              <Text style={styles.congratsMessage}>
-                You've lost! Better luck next time.
-              </Text>
+              <Text style={styles.congratsMessage}>You've lost! Better luck next time.</Text>
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={resetGameState}>
+                <CustomButton style={styles.button} onPress={resetGameState}>
                   <Text style={styles.buttonText}>Try Again</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={() => router.push('/')}
-                >
+                </CustomButton>
+                <CustomButton style={styles.button} onPress={() => router.push('/')}>
                   <Text style={styles.buttonText}>Back to Main Menu</Text>
-                </TouchableOpacity>
+                </CustomButton>
               </View>
             </View>
           )
@@ -203,13 +193,13 @@ export default function SinglePlayerGame() {
               editable={!isLoading}
             />
             <View style={styles.buttonContainer}>
-              <TouchableOpacity
+              <CustomButton
                 style={[styles.button, isLoading && styles.buttonDisabled]}
                 onPress={handleGuessSubmission}
                 disabled={isLoading}
               >
                 <Text style={styles.buttonText}>Submit</Text>
-              </TouchableOpacity>
+              </CustomButton>
             </View>
             <Text style={styles.guessCounter}>Guesses: {guessCount}</Text>
             {isLoading ? (
@@ -217,29 +207,34 @@ export default function SinglePlayerGame() {
                 <ActivityIndicator size={70} color="#40798C" />
                 <Text style={styles.loadingText}>Processing your guess...</Text>
               </View>
-            ) : response ? (
-              <ScrollView style={styles.responseContainer}>
-                <Text style={styles.responseText}>
-                  <Text style={styles.boldText}>Your Guess:</Text> {userGuessDisplay}
-                </Text>
-                <Text style={styles.responseText}>
-                  <Text style={styles.boldText}>Response:</Text> {response}
-                </Text>
-              </ScrollView>
+            ) : history.length > 0 ? (
+              <View style={styles.latestMessageContainer}>
+                <View style={styles.guessBubble}>
+                  <Text style={styles.messageText}>
+                    <Text style={styles.boldText}>Your Guess:</Text> {history[history.length - 1].guess}
+                  </Text>
+                </View>
+                <View style={styles.responseBubble}>
+                  <Text style={styles.messageText}>
+                    <Text style={styles.boldText}>Response:</Text>{' '}
+                    {history[history.length - 1].response}
+                  </Text>
+                </View>
+              </View>
             ) : null}
           </View>
         )}
       </View>
 
       <View style={styles.historyButtonContainer}>
-        <TouchableOpacity
+        <CustomButton
           style={styles.button}
           onPress={() => setIsSideMenuVisible(!isSideMenuVisible)}
         >
           <Text style={styles.buttonText}>
             {isSideMenuVisible ? 'Hide Guess History' : 'Show Guess History'}
           </Text>
-        </TouchableOpacity>
+        </CustomButton>
       </View>
 
       {isGameWon && (
@@ -266,23 +261,25 @@ export default function SinglePlayerGame() {
             data={history}
             keyExtractor={(_, index) => index.toString()}
             renderItem={({ item }) => (
-              <View style={styles.historyItem}>
-                <Text style={styles.historyText}>
-                  <Text style={styles.boldText}>Your Guess:</Text> {item.guess}
-                </Text>
-                <Text style={styles.historyText}>
-                  <Text style={styles.boldText}>Response:</Text> {item.response}
-                </Text>
+              <View>
+                <View style={styles.guessBubble}>
+                  <Text style={styles.messageText}>
+                    <Text style={styles.boldText}>Your Guess:</Text> {item.guess}
+                  </Text>
+                </View>
+                <View style={styles.responseBubble}>
+                  <Text style={styles.messageText}>
+                    <Text style={styles.boldText}>Response:</Text> {item.response}
+                  </Text>
+                </View>
               </View>
             )}
+            style={styles.messageContainer}
           />
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => setIsSideMenuVisible(false)}
-            >
+            <CustomButton style={styles.button} onPress={() => setIsSideMenuVisible(false)}>
               <Text style={styles.buttonText}>Close</Text>
-            </TouchableOpacity>
+            </CustomButton>
           </View>
         </View>
       </Modal>

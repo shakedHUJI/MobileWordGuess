@@ -1,10 +1,10 @@
+// multi-player-game.tsx
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
-  ScrollView,
   Alert,
   Modal,
   FlatList,
@@ -15,16 +15,25 @@ import styles from '../styles/styles';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useWebSocket } from './WebSocketProvider';
+import CustomButton from '../components/CustomButton';
 
 const { width, height } = Dimensions.get('window');
 
 export default function MultiPlayerGame() {
   const router = useRouter();
-  const { gameId, playerName, currentPlayer: initialCurrentPlayer } = useLocalSearchParams<{ gameId: string; playerName: string; currentPlayer: string }>();
+  const { gameId, playerName, currentPlayer: initialCurrentPlayer } = useLocalSearchParams<{
+    gameId: string;
+    playerName: string;
+    currentPlayer: string;
+  }>();
   const [currentPlayer, setCurrentPlayer] = useState<string>(initialCurrentPlayer);
-  const [turnIndicator, setTurnIndicator] = useState<string>(initialCurrentPlayer === playerName ? "It's your turn!" : `It's ${initialCurrentPlayer}'s turn.`);
+  const [turnIndicator, setTurnIndicator] = useState<string>(
+    initialCurrentPlayer === playerName ? "It's your turn!" : `It's ${initialCurrentPlayer}'s turn.`
+  );
   const [userGuess, setUserGuess] = useState<string>('');
-  const [isSubmitDisabled, setIsSubmitDisabled] = useState<boolean>(initialCurrentPlayer !== playerName);
+  const [isSubmitDisabled, setIsSubmitDisabled] = useState<boolean>(
+    initialCurrentPlayer !== playerName
+  );
   const [response, setResponse] = useState<string>('');
   const [emoji, setEmoji] = useState<string>('');
   const [history, setHistory] = useState<
@@ -59,20 +68,22 @@ export default function MultiPlayerGame() {
   }, [emoji]);
 
   const handleGameStateUpdate = (data: any) => {
-    console.log('Received WebSocket message:', data); // Add logging
+    console.log('Received WebSocket message:', data);
 
     if (data.action === 'game_update' || data.action === 'correct_guess') {
       setCurrentPlayer(data.currentPlayer);
-      setTurnIndicator(data.currentPlayer === playerName ? "It's your turn!" : `It's ${data.currentPlayer}'s turn.`);
+      setTurnIndicator(
+        data.currentPlayer === playerName ? "It's your turn!" : `It's ${data.currentPlayer}'s turn.`
+      );
       setIsSubmitDisabled(data.currentPlayer !== playerName);
       updateGameUI(data);
     } else if (data.action === 'player_joined' && data.startingPlayer) {
       setCurrentPlayer(data.startingPlayer);
-      setTurnIndicator(data.startingPlayer === playerName ? "It's your turn!" : `It's ${data.startingPlayer}'s turn.`);
+      setTurnIndicator(
+        data.startingPlayer === playerName ? "It's your turn!" : `It's ${data.startingPlayer}'s turn.`
+      );
       setIsSubmitDisabled(data.startingPlayer !== playerName);
-    }
-      else if (data.action === 'game_reset') {
-      // Reset the game state
+    } else if (data.action === 'game_reset') {
       setIsGameWon(false);
       setIsGameOver(false);
       setResponse('');
@@ -81,12 +92,11 @@ export default function MultiPlayerGame() {
       setHistory([]);
       setEmoji('');
       setIsSubmitDisabled(data.currentPlayer !== playerName);
-      setTurnIndicator(data.currentPlayer === playerName ? "It's your turn!" : `It's ${data.currentPlayer}'s turn.`);
-    }
-    else if (data.action === 'return_to_lobby') {
-      // Determine if current player is host
+      setTurnIndicator(
+        data.currentPlayer === playerName ? "It's your turn!" : `It's ${data.currentPlayer}'s turn.`
+      );
+    } else if (data.action === 'return_to_lobby') {
       const isHost = data.host === playerName;
-      // Navigate back to game lobby
       router.push({
         pathname: '/game-lobby',
         params: {
@@ -112,7 +122,7 @@ export default function MultiPlayerGame() {
     setResponse(data.response);
     setGuessCount((prevCount) => prevCount + 1);
     setUserGuess('');
-    setShowFirstGuessMessage(false); // Hide the message after the first guess
+    setShowFirstGuessMessage(false);
 
     if (data.action === 'correct_guess') {
       setIsGameOver(true);
@@ -135,12 +145,14 @@ export default function MultiPlayerGame() {
 
     setIsLoading(true);
     if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        action: 'submit_guess',
-        gameId,
-        playerName,
-        userGuess: userGuess.trim(),
-      }));
+      ws.send(
+        JSON.stringify({
+          action: 'submit_guess',
+          gameId,
+          playerName,
+          userGuess: userGuess.trim(),
+        })
+      );
     } else {
       setIsLoading(false);
       Alert.alert('Error', 'WebSocket connection is not open.');
@@ -148,7 +160,6 @@ export default function MultiPlayerGame() {
   };
 
   const resetGameState = () => {
-    // Reset local game state variables
     setIsGameWon(false);
     setIsGameOver(false);
     setResponse('');
@@ -159,19 +170,20 @@ export default function MultiPlayerGame() {
     setIsSubmitDisabled(false);
     setEmojiBackground(false);
     setShowFirstGuessMessage(true);
-    // Send 'play_again' action to the server
     if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        action: 'play_again',
-        gameId,
-        playerName,
-      }));
+      ws.send(
+        JSON.stringify({
+          action: 'play_again',
+          gameId,
+          playerName,
+        })
+      );
     } else {
       Alert.alert('Error', 'WebSocket connection is not open.');
       router.push('/');
     }
   };
-  
+
   return (
     <View style={styles.container}>
       {emojiBackground && (
@@ -199,15 +211,12 @@ export default function MultiPlayerGame() {
                 Congratulations! You've guessed the secret word!
               </Text>
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={resetGameState}>
+                <CustomButton style={styles.button} onPress={resetGameState}>
                   <Text style={styles.buttonText}>Play Again</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={() => router.push('/')}
-                >
+                </CustomButton>
+                <CustomButton style={styles.button} onPress={() => router.push('/')}>
                   <Text style={styles.buttonText}>Back to Main Menu</Text>
-                </TouchableOpacity>
+                </CustomButton>
               </View>
             </View>
           ) : (
@@ -217,15 +226,12 @@ export default function MultiPlayerGame() {
                 Game Over! {history[history.length - 1].player} guessed the word.
               </Text>
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={resetGameState}>
+                <CustomButton style={styles.button} onPress={resetGameState}>
                   <Text style={styles.buttonText}>Try Again</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={() => router.push('/')}
-                >
+                </CustomButton>
+                <CustomButton style={styles.button} onPress={() => router.push('/')}>
                   <Text style={styles.buttonText}>Back to Main Menu</Text>
-                </TouchableOpacity>
+                </CustomButton>
               </View>
             </View>
           )
@@ -246,29 +252,37 @@ export default function MultiPlayerGame() {
               editable={!isSubmitDisabled && !isLoading}
             />
             <View style={styles.buttonContainer}>
-              <TouchableOpacity
+              <CustomButton
                 style={[styles.button, (isSubmitDisabled || isLoading) && styles.buttonDisabled]}
                 onPress={handleGuessSubmission}
                 disabled={isSubmitDisabled || isLoading}
               >
                 <Text style={styles.buttonText}>Submit</Text>
-              </TouchableOpacity>
+              </CustomButton>
             </View>
             <Text style={styles.guessCounter}>Guesses: {guessCount}</Text>
             {isLoading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size={70} color="#40798C" />
                 <Text style={styles.loadingText}>Processing your guess...</Text>
+              </View>
+            ) : history.length > 0 ? (
+              <View style={styles.latestMessageContainer}>
+                <View style={styles.guessBubble}>
+                  <Text style={styles.messageText}>
+                    <Text style={styles.boldText}>
+                      {history[history.length - 1].player}'s Guess:
+                    </Text>{' '}
+                    {history[history.length - 1].guess}
+                  </Text>
                 </View>
-            ) : response && history.length > 0 ? (
-              <ScrollView style={styles.responseContainer}>
-                <Text style={styles.responseText}>
-                  <Text style={styles.boldText}>{history[history.length - 1].player}'s Guess:</Text> {history[history.length - 1].guess}
-                </Text>
-                <Text style={styles.responseText}>
-                  <Text style={styles.boldText}>Response:</Text> {response}
-                </Text>
-              </ScrollView>
+                <View style={styles.responseBubble}>
+                  <Text style={styles.messageText}>
+                    <Text style={styles.boldText}>Response:</Text>{' '}
+                    {history[history.length - 1].response}
+                  </Text>
+                </View>
+              </View>
             ) : null}
           </View>
         )}
@@ -276,14 +290,14 @@ export default function MultiPlayerGame() {
 
       {!isGameOver && (
         <View style={styles.historyButtonContainer}>
-          <TouchableOpacity
+          <CustomButton
             style={styles.button}
             onPress={() => setIsSideMenuVisible(!isSideMenuVisible)}
           >
             <Text style={styles.buttonText}>
               {isSideMenuVisible ? 'Hide Guess History' : 'Show Guess History'}
             </Text>
-          </TouchableOpacity>
+          </CustomButton>
         </View>
       )}
 
@@ -311,26 +325,28 @@ export default function MultiPlayerGame() {
             data={history}
             keyExtractor={(_, index) => index.toString()}
             renderItem={({ item }) => (
-              <View style={styles.historyItem}>
-                <Text style={styles.historyText}>
-                  <Text style={styles.boldText}>
-                    {item.player ? `${item.player}'s` : 'Your'} Guess:
-                  </Text>{' '}
-                  {item.guess}
-                </Text>
-                <Text style={styles.historyText}>
-                  <Text style={styles.boldText}>Response:</Text> {item.response}
-                </Text>
+              <View>
+                <View style={styles.guessBubble}>
+                  <Text style={styles.messageText}>
+                    <Text style={styles.boldText}>
+                      {item.player ? `${item.player}'s` : 'Your'} Guess:
+                    </Text>{' '}
+                    {item.guess}
+                  </Text>
+                </View>
+                <View style={styles.responseBubble}>
+                  <Text style={styles.messageText}>
+                    <Text style={styles.boldText}>Response:</Text> {item.response}
+                  </Text>
+                </View>
               </View>
             )}
+            style={styles.messageContainer}
           />
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => setIsSideMenuVisible(false)}
-            >
+            <CustomButton style={styles.button} onPress={() => setIsSideMenuVisible(false)}>
               <Text style={styles.buttonText}>Close</Text>
-            </TouchableOpacity>
+            </CustomButton>
           </View>
         </View>
       </Modal>

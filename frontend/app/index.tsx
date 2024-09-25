@@ -1,8 +1,9 @@
 // app/index.tsx
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text} from 'react-native';
 import styles from '../styles/styles';
 import { useRouter } from 'expo-router';
+import CustomButton from '../components/CustomButton';
 
 export default function MainScreen() {
   const router = useRouter();
@@ -13,20 +14,20 @@ export default function MainScreen() {
       <View style={styles.modeSelectionContainer}>
         <Text style={styles.heading}>Select Game Mode</Text>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
+          <CustomButton
             style={styles.button}
             onPress={() => router.push('/single-player')}
           >
             <Text style={styles.buttonText}>Single Player</Text>
-          </TouchableOpacity>
+          </CustomButton>
         </View>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
+          <CustomButton
             style={styles.button}
             onPress={() => router.push('/multi-player-selection')}
           >
             <Text style={styles.buttonText}>2-Player</Text>
-          </TouchableOpacity>
+          </CustomButton>
         </View>
       </View>
     </View>

@@ -5,13 +5,13 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import styles from '../styles/styles';
 import { useWebSocket } from './WebSocketProvider';
+import CustomButton from '../components/CustomButton';
 
 const JoinMultiPlayerGame = () => {
   const router = useRouter();
@@ -143,7 +143,7 @@ const JoinMultiPlayerGame = () => {
         ))}
       </View>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
+        <CustomButton
           style={[styles.button, isJoining && styles.buttonDisabled]}
           onPress={() => joinGame(gameId.join(''))}
           disabled={isJoining}
@@ -151,7 +151,7 @@ const JoinMultiPlayerGame = () => {
           <Text style={styles.buttonText}>
             {isJoining ? 'Joining...' : 'Join Game'}
           </Text>
-        </TouchableOpacity>
+        </CustomButton>
       </View>
     </View>
   );

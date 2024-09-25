@@ -1,11 +1,12 @@
 // MultiPlayerSelection.tsx
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Alert, Platform } from 'react-native';
+import { View, Text, TextInput, Alert, Platform } from 'react-native';
 import styles from '../styles/styles';
 import { useRouter } from 'expo-router';
 import { useWebSocket } from './WebSocketProvider';
 import WebAlert from '../components/WebAlert';
+import CustomButton from '../components/CustomButton';
 
 export default function MultiPlayerSelection() {
   const router = useRouter();
@@ -85,17 +86,17 @@ export default function MultiPlayerSelection() {
         />
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={createGame}>
+          <CustomButton style={styles.button} onPress={createGame}>
             <Text style={styles.buttonText}>Create Game</Text>
-          </TouchableOpacity>
+          </CustomButton>
         </View>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
+          <CustomButton
             style={styles.button}
             onPress={joinGame}
           >
             <Text style={styles.buttonText}>Join Game</Text>
-          </TouchableOpacity>
+          </CustomButton>
         </View>
       </View>
 
