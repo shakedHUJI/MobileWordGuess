@@ -1,5 +1,3 @@
-// single-player-game.tsx
-
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Text,
@@ -10,13 +8,75 @@ import {
   FlatList,
   Dimensions,
   ActivityIndicator,
+  SafeAreaView,
+  Animated,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import styles from '../styles/styles';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useRouter } from 'expo-router';
 import CustomButton from '../components/CustomButton';
+import { Send, History, X, Wand2 } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
+
+interface EmojiBackgroundProps {
+  emoji: string;
+  visible: boolean;
+}
+
+const EmojiBackground = ({ emoji, visible }: EmojiBackgroundProps) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [currentEmoji, setCurrentEmoji] = useState(emoji);
+
+  useEffect(() => {
+    if (visible && emoji !== currentEmoji) {
+      // Fade out current emoji
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }).start(() => {
+        // Update emoji and fade in
+        setCurrentEmoji(emoji);
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }).start();
+      });
+    } else if (visible) {
+      // Just fade in if it's the same emoji
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible, emoji]);
+
+  return (
+    <Animated.View
+      style={{
+        ...styles.emojiBackgroundContainer,
+        opacity: fadeAnim,
+      }}
+    >
+      {Array.from({ length: Math.ceil(height / 50) }).map((_, rowIndex) => (
+        <View key={rowIndex} style={styles.emojiRow}>
+          {Array.from({ length: Math.ceil(width / 50) }).map((_, colIndex) => (
+            <Text
+              key={colIndex}
+              style={styles.emojiBackgroundText}
+            >
+              {currentEmoji}
+            </Text>
+          ))}
+        </View>
+      ))}
+    </Animated.View>
+  );
+};
 
 export default function SinglePlayerGame() {
   const router = useRouter();
@@ -25,13 +85,12 @@ export default function SinglePlayerGame() {
   const [userGuess, setUserGuess] = useState<string>('');
   const [response, setResponse] = useState<string>('');
   const [emoji, setEmoji] = useState<string>('');
+  const [showEmojiBackground, setShowEmojiBackground] = useState<boolean>(false);
   const [history, setHistory] = useState<{ guess: string; response: string }[]>([]);
   const [isGameWon, setIsGameWon] = useState<boolean>(false);
   const [isGameOver, setIsGameOver] = useState<boolean>(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string>('');
   const [isSideMenuVisible, setIsSideMenuVisible] = useState<boolean>(false);
-  const [emojiBackground, setEmojiBackground] = useState<boolean>(false);
-  const [userGuessDisplay, setUserGuessDisplay] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const confettiRef = useRef<any>(null);
@@ -66,7 +125,7 @@ export default function SinglePlayerGame() {
       const data = await response.json();
       updateGameUI(data);
     } catch (error) {
-      Alert.alert('Error', 'Failed to submit your guess.');
+      Alert.alert('Magical Mishap', 'Failed to cast your spell. Try again!');
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +144,10 @@ export default function SinglePlayerGame() {
 
     setResponse(data.response);
     setEmoji(data.emoji);
-    setUserGuessDisplay(userGuess);
+    setShowEmojiBackground(true);
+
+    // Remove the timeout that hides the emoji background
+    // The emoji will now stay visible until a new one arrives
 
     if (data.response && data.response.includes('Congratulations!')) {
       setIsGameWon(true);
@@ -99,13 +161,12 @@ export default function SinglePlayerGame() {
     setIsGameOver(false);
     setResponse('');
     setUserGuess('');
-    setUserGuessDisplay('');
     setGuessCount(0);
     setHistory([]);
     setSessionId(generateSessionId());
     setEmoji('');
     setFeedbackMessage('');
-    setEmojiBackground(false);
+    setShowEmojiBackground(false);
 
     fetch(`${serverUrl}/generate`, {
       method: 'POST',
@@ -118,171 +179,167 @@ export default function SinglePlayerGame() {
         generateNewWord: 'true',
       }).toString(),
     }).catch(() => {
-      Alert.alert('Error', 'Failed to reset the game.');
+      Alert.alert('Magical Mishap', 'Failed to conjure a new word. Try again!');
     });
   };
 
-  useEffect(() => {
-    if (emoji) {
-      setEmojiBackground(true);
-    } else {
-      setEmojiBackground(false);
-    }
-  }, [emoji]);
-
   return (
-    <View style={styles.container}>
-      {emojiBackground && (
-        <View style={styles.emojiBackgroundContainer}>
-          {Array.from({ length: Math.ceil(height / 50) }).map((_, rowIndex) => (
-            <View key={rowIndex} style={styles.emojiRow}>
-              {Array.from({ length: Math.ceil(width / 50) }).map((_, colIndex) => (
-                <Text key={colIndex} style={styles.emojiBackgroundText}>
-                  {emoji}
-                </Text>
-              ))}
-            </View>
-          ))}
-        </View>
-      )}
-
-      <Text style={styles.mainHeader}>Word Guess</Text>
-
-      <View style={styles.gameContainer}>
-        {feedbackMessage ? (
-          <Text style={styles.feedbackMessage}>{feedbackMessage}</Text>
-        ) : null}
-        {isGameOver ? (
-          isGameWon ? (
-            <View style={styles.congratsContent}>
-              <Text style={styles.celebrateEmoji}>{emoji || '🥳'}</Text>
-              <Text style={styles.congratsMessage}>
-                Congratulations! You've guessed the secret word using {guessCount} guesses!
-              </Text>
-              <View style={styles.buttonContainer}>
-                <CustomButton style={styles.button} onPress={resetGameState}>
-                  <Text style={styles.buttonText}>Play Again</Text>
-                </CustomButton>
-                <CustomButton style={styles.button} onPress={() => router.push('/')}>
-                  <Text style={styles.buttonText}>Back to Main Menu</Text>
-                </CustomButton>
-              </View>
-            </View>
-          ) : (
-            <View style={styles.congratsContent}>
-              <Text style={styles.celebrateEmoji}>{emoji || '😢'}</Text>
-              <Text style={styles.congratsMessage}>You've lost! Better luck next time.</Text>
-              <View style={styles.buttonContainer}>
-                <CustomButton style={styles.button} onPress={resetGameState}>
-                  <Text style={styles.buttonText}>Try Again</Text>
-                </CustomButton>
-                <CustomButton style={styles.button} onPress={() => router.push('/')}>
-                  <Text style={styles.buttonText}>Back to Main Menu</Text>
-                </CustomButton>
-              </View>
-            </View>
-          )
-        ) : (
-          <View style={styles.gameContent}>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your guess"
-              placeholderTextColor="#888"
-              value={userGuess}
-              onChangeText={setUserGuess}
-              editable={!isLoading}
-            />
-            <View style={styles.buttonContainer}>
-              <CustomButton
-                style={[styles.button, isLoading && styles.buttonDisabled]}
-                onPress={handleGuessSubmission}
-                disabled={isLoading}
-              >
-                <Text style={styles.buttonText}>Submit</Text>
-              </CustomButton>
-            </View>
-            <Text style={styles.guessCounter}>Guesses: {guessCount}</Text>
-            {isLoading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size={70} color="#40798C" />
-                <Text style={styles.loadingText}>Processing your guess...</Text>
-              </View>
-            ) : history.length > 0 ? (
-              <View style={styles.latestMessageContainer}>
-                <View style={styles.guessBubble}>
-                  <Text style={styles.messageText}>
-                    <Text style={styles.boldText}>Your Guess:</Text> {history[history.length - 1].guess}
-                  </Text>
-                </View>
-                <View style={styles.responseBubble}>
-                  <Text style={styles.messageText}>
-                    <Text style={styles.boldText}>Response:</Text>{' '}
-                    {history[history.length - 1].response}
-                  </Text>
-                </View>
-              </View>
-            ) : null}
-          </View>
-        )}
-      </View>
-
-      <View style={styles.historyButtonContainer}>
-        <CustomButton
-          style={styles.button}
-          onPress={() => setIsSideMenuVisible(!isSideMenuVisible)}
-        >
-          <Text style={styles.buttonText}>
-            {isSideMenuVisible ? 'Hide Guess History' : 'Show Guess History'}
-          </Text>
-        </CustomButton>
-      </View>
-
-      {isGameWon && (
-        <ConfettiCannon
-          count={200}
-          origin={{ x: -10, y: 0 }}
-          autoStart={true}
-          fadeOut={true}
-          ref={confettiRef}
-        />
-      )}
-
-      <Modal
-        animationType="slide"
-        transparent={false}
-        visible={isSideMenuVisible}
-        onRequestClose={() => {
-          setIsSideMenuVisible(false);
-        }}
+    <SafeAreaView style={styles.safeArea}>
+      <LinearGradient
+        colors={['#FFD700', '#FF69B4', '#4169E1']}
+        style={styles.container}
       >
-        <View style={styles.sideMenuContent}>
-          <Text style={styles.heading}>Guess History</Text>
-          <FlatList
-            data={history}
-            keyExtractor={(_, index) => index.toString()}
-            renderItem={({ item }) => (
-              <View>
-                <View style={styles.guessBubble}>
-                  <Text style={styles.messageText}>
-                    <Text style={styles.boldText}>Your Guess:</Text> {item.guess}
+        <EmojiBackground emoji={emoji} visible={showEmojiBackground} />
+        <View style={styles.gameWrapper}>
+          <Text style={styles.mainHeader}>Word Wizardry</Text>
+
+          <View style={styles.gameContainer}>
+            {feedbackMessage ? (
+              <Text style={styles.feedbackMessage}>{feedbackMessage}</Text>
+            ) : null}
+            {isGameOver ? (
+              isGameWon ? (
+                <View style={styles.congratsContent}>
+                  <Text style={styles.celebrateEmoji}>{emoji || '🎉'}</Text>
+                  <Text style={styles.congratsMessage}>
+                    Magical! You've uncovered the secret word in {guessCount} spells!
                   </Text>
+                  <View style={styles.buttonContainer}>
+                    <CustomButton style={styles.button} onPress={resetGameState}>
+                      <Wand2 color="#FFFFFF" size={24} style={styles.buttonIcon} />
+                      <Text style={styles.buttonText}>Cast Another Spell</Text>
+                    </CustomButton>
+                    <CustomButton style={styles.button} onPress={() => router.push('/')}>
+                      <Text style={styles.buttonText}>Return to Wizard's Tower</Text>
+                    </CustomButton>
+                  </View>
                 </View>
-                <View style={styles.responseBubble}>
-                  <Text style={styles.messageText}>
-                    <Text style={styles.boldText}>Response:</Text> {item.response}
-                  </Text>
+              ) : (
+                <View style={styles.congratsContent}>
+                  <Text style={styles.celebrateEmoji}>{emoji || '😢'}</Text>
+                  <Text style={styles.congratsMessage}>The spell fizzled! Try again, young wizard!</Text>
+                  <View style={styles.buttonContainer}>
+                    <CustomButton style={styles.button} onPress={resetGameState}>
+                      <Wand2 color="#FFFFFF" size={24} style={styles.buttonIcon} />
+                      <Text style={styles.buttonText}>Try Another Incantation</Text>
+                    </CustomButton>
+                    <CustomButton style={styles.button} onPress={() => router.push('/')}>
+                      <Text style={styles.buttonText}>Return to Wizard's Tower</Text>
+                    </CustomButton>
+                  </View>
                 </View>
+              )
+            ) : (
+              <View style={styles.gameContent}>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Whisper your magical guess..."
+                    placeholderTextColor="#888"
+                    value={userGuess}
+                    onChangeText={setUserGuess}
+                    editable={!isLoading}
+                  />
+                  <CustomButton
+                    style={[styles.sendButton, isLoading && styles.buttonDisabled]}
+                    onPress={handleGuessSubmission}
+                    disabled={isLoading}
+                  >
+                    <Send color="#FFFFFF" size={24} />
+                  </CustomButton>
+                </View>
+                <Text style={styles.guessCounter}>Magical Attempts: {guessCount}</Text>
+                {isLoading ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size={70} color="#40798C" />
+                    <Text style={styles.loadingText}>Conjuring response...</Text>
+                  </View>
+                ) : history.length > 0 ? (
+                  <View style={styles.latestMessageContainer}>
+                    <View style={styles.guessBubble}>
+                      <Text style={styles.messageText}>
+                        <Text style={styles.boldText}>Your Spell:</Text> {history[history.length - 1].guess}
+                      </Text>
+                    </View>
+                    <View style={styles.responseBubble}>
+                      <Text style={styles.messageText}>
+                        <Text style={styles.boldText}>Crystal Ball Says:</Text>{' '}
+                        {history[history.length - 1].response}
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
               </View>
             )}
-            style={styles.messageContainer}
-          />
-          <View style={styles.buttonContainer}>
-            <CustomButton style={styles.button} onPress={() => setIsSideMenuVisible(false)}>
-              <Text style={styles.buttonText}>Close</Text>
-            </CustomButton>
           </View>
+
+          {!isGameOver && (
+            <View style={styles.historyButtonContainer}>
+              <CustomButton
+                style={styles.historyButton}
+                onPress={() => setIsSideMenuVisible(!isSideMenuVisible)}
+              >
+                <History color="#FFFFFF" size={24} style={styles.buttonIcon} />
+                <Text style={styles.historyButtonText}>
+                  {isSideMenuVisible ? 'Hide Spell History' : 'Show Spell History'}
+                </Text>
+              </CustomButton>
+            </View>
+          )}
+
+          {isGameWon && (
+            <ConfettiCannon
+              count={200}
+              origin={{ x: -10, y: 0 }}
+              autoStart={true}
+              fadeOut={true}
+              ref={confettiRef}
+            />
+          )}
+
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={isSideMenuVisible}
+            onRequestClose={() => {
+              setIsSideMenuVisible(false);
+            }}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.sideMenuContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.heading}>Spell History</Text>
+                  <CustomButton
+                    style={styles.closeButton}
+                    onPress={() => setIsSideMenuVisible(false)}
+                  >
+                    <X color="#FFFFFF" size={24} />
+                  </CustomButton>
+                </View>
+                <FlatList
+                  data={history}
+                  keyExtractor={(_, index) => index.toString()}
+                  renderItem={({ item }) => (
+                    <View>
+                      <View style={styles.guessBubble}>
+                        <Text style={styles.messageText}>
+                          <Text style={styles.boldText}>Your Spell:</Text> {item.guess}
+                        </Text>
+                      </View>
+                      <View style={styles.responseBubble}>
+                        <Text style={styles.messageText}>
+                          <Text style={styles.boldText}>Crystal Ball:</Text> {item.response}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                  style={styles.messageContainer}
+                />
+              </View>
+            </View>
+          </Modal>
         </View>
-      </Modal>
-    </View>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }

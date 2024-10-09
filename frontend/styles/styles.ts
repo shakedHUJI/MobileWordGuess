@@ -1,18 +1,135 @@
-// styles.ts
+import { StyleSheet, Dimensions } from 'react-native';
 
-import { StyleSheet } from 'react-native';
+const { width, height } = Dimensions.get('window');
 
-const primaryColor = '#40798C';
-const secondaryColor = '#6FA8DC';
-const backgroundColor = '#F4FAFF';
-const textColor = '#1F363D';
+const primaryColor = '#6A0DAD';
+const secondaryColor = '#FF69B4';
+const backgroundColor = '#F0E6FF';
+const textColor = '#4A0E4E';
 const inputBackgroundColor = '#FFFFFF';
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  gameWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mainHeader: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginVertical: 20,
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
+  },
+  modeSelectionContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  heading: {
+    fontSize: 24,
+    color: primaryColor,
+    fontWeight: 'bold',
+    marginVertical: 10,
+    textAlign: 'center',
+  },
+  input: {
+    flex: 1,
+    padding: 15,
+    marginRight: 10,
+    borderColor: secondaryColor,
+    borderWidth: 2,
+    borderRadius: 25,
+    color: textColor,
+    backgroundColor: inputBackgroundColor,
+    fontSize: 16,
+  },
+  buttonContainer: {
+    marginVertical: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  button: {
+    backgroundColor: primaryColor,
+    padding: 15,
+    borderRadius: 25,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 300,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  buttonDisabled: {
+    backgroundColor: '#555',
+    opacity: 0.5,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginLeft: 10,
+  },
+  buttonIcon: {
+    marginRight: 10,
+  },
+  gameIdContainer: {
+    alignItems: 'center',
+    marginVertical: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 15,
+    padding: 15,
+  },
+  gameIdLabel: {
+    fontSize: 18,
+    color: textColor,
+    marginBottom: 5,
+  },
+  gameId: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: primaryColor,
+  },
+  playersListContainer: {
+    width: '100%',
+    maxWidth: 400,
+    marginVertical: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 15,
+    padding: 15,
+  },
+  playerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 5,
+  },
+  playerIcon: {
+    marginRight: 10,
+  },
+  playerName: {
+    fontSize: 18,
+    color: textColor,
+  },
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: backgroundColor,
   },
   emojiBackgroundContainer: {
     position: 'absolute',
@@ -20,39 +137,38 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    flex: 1,
-    zIndex: -1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   emojiRow: {
     flexDirection: 'row',
+    justifyContent: 'center',
   },
   emojiBackgroundText: {
     fontSize: 40,
+    opacity: 0.4,
     margin: 5,
-    opacity: 0.3,
   },
-  mainHeader: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginVertical: 20,
-    color: '#2A4D5D', // Changed to a darker shade
-  },
-  modeSelectionContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  setupContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
+  sparklesIcon: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
   },
   gameContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 20,
+    padding: 20,
     alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   gameContent: {
     alignItems: 'center',
@@ -66,26 +182,43 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   congratsMessage: {
-    fontSize: 20,
+    fontSize: 24,
     textAlign: 'center',
     marginVertical: 20,
     color: textColor,
+    fontWeight: 'bold',
   },
-  input: {
-    width: '80%',
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 10,
+  },
+  sendButton: {
+    backgroundColor: primaryColor,
     padding: 15,
-    marginVertical: 10,
-    borderColor: secondaryColor,
-    borderWidth: 1,
-    borderRadius: 10,
-    color: textColor,
-    backgroundColor: inputBackgroundColor,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sideMenuContent: {
-    flex: 1,
-    padding: 20,
+    width: '80%',
+    maxWidth: 400,
     backgroundColor: backgroundColor,
+    borderRadius: 20,
+    padding: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  closeButton: {
+    backgroundColor: primaryColor,
+    padding: 10,
+    borderRadius: 20,
   },
   historyItem: {
     marginVertical: 5,
@@ -97,90 +230,37 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: textColor,
   },
-  feedbackMessage: {
+  guessCounter: {
     fontSize: 18,
-    marginBottom: 20,
-    textAlign: 'center',
+    marginTop: 10,
     color: textColor,
-  },
-  heading: {
-    fontSize: 24,
-    marginVertical: 10,
-    textAlign: 'center',
-    color: secondaryColor,
     fontWeight: 'bold',
   },
-  emojiText: {
-    fontSize: 50,
-    textAlign: 'center',
-    marginTop: 10,
-  },
-  guessCounter: {
-    fontSize: 16,
-    marginTop: 10,
-    color: textColor,
-  },
   turnIndicator: {
-    fontSize: 18,
-    marginBottom: 10,
+    fontSize: 20,
+    marginBottom: 15,
     textAlign: 'center',
-    color: textColor,
-  },
-  historyText: {
-    fontSize: 16,
-    marginBottom: 5,
-    color: textColor,
-  },
-  buttonContainer: {
-    marginVertical: 10,
-    width: '100%',
-    alignItems: 'center',
+    color: primaryColor,
+    fontWeight: 'bold',
   },
   historyButtonContainer: {
-    marginTop: 10,
+    marginTop: 20,
     width: '100%',
     alignItems: 'center',
   },
-  button: {
-    backgroundColor: primaryColor,
+  historyButton: {
+    backgroundColor: secondaryColor,
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 25,
+    flexDirection: 'row',
     alignItems: 'center',
-    width: '80%',
-    maxWidth: 300,
+    justifyContent: 'center',
   },
-  buttonDisabled: {
-    backgroundColor: '#555',
-    opacity: 0.5,
-  },
-  buttonText: {
+  historyButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  gameIdContainer: {
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  gameIdLabel: {
-    fontSize: 18,
-    color: textColor,
-  },
-  gameId: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: primaryColor,
-    marginTop: 10,
-  },
-  playersListContainer: {
-    width: '80%',
-    marginVertical: 20,
-  },
-  playerItem: {
-    fontSize: 18,
-    color: textColor,
-    marginVertical: 5,
+    marginLeft: 10,
   },
   loadingContainer: {
     alignItems: 'center',
@@ -191,50 +271,22 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 15,
     fontSize: 18,
-    color: '#333',
+    color: primaryColor,
+    fontWeight: 'bold',
   },
-  overlay: {
+  modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  alertBox: {
-    width: 300,
-    padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  alertTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: textColor,
-  },
-  alertMessage: {
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: 'center',
-    color: textColor,
-  },
-  alertButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: primaryColor,
-    borderRadius: 5,
-  },
-  alertButtonText: {
-    color: 'white',
-    fontSize: 16,
-  },
   firstGuessMessage: {
-    fontSize: 18,
+    fontSize: 20,
     color: secondaryColor,
     marginVertical: 10,
     textAlign: 'center',
+    fontWeight: 'bold',
   },
-  // New styles for message bubbles
   latestMessageContainer: {
     marginVertical: 10,
     width: '100%',
@@ -242,7 +294,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   guessBubble: {
-    backgroundColor: '#DCF8C6', // Light green for the guess
+    backgroundColor: '#b1f0c6',
     padding: 15,
     borderRadius: 20,
     marginBottom: 10,
@@ -250,7 +302,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   responseBubble: {
-    backgroundColor: '#E1F5FE', // Light blue for the response
+    backgroundColor: '#d3cce6',
     padding: 15,
     borderRadius: 20,
     marginBottom: 10,
@@ -261,11 +313,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: textColor,
   },
-  // Keep the messageContainer style for the history modal
   messageContainer: {
     marginVertical: 10,
     width: '100%',
     paddingHorizontal: 10,
+  },
+  feedbackMessage: {
+    fontSize: 18,
+    color: primaryColor,
+    textAlign: 'center',
+    marginVertical: 10,
+    fontWeight: 'bold',
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
   },
 });
 

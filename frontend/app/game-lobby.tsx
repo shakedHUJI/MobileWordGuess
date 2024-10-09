@@ -1,11 +1,13 @@
 // GameLobby.tsx
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Alert } from 'react-native';
+import { View, Text, FlatList, Alert, SafeAreaView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import CustomButton from '../components/CustomButton';
 import styles from '../styles/styles';
 import { useWebSocket } from './WebSocketProvider';
+import { PlayCircle, User, Sparkles } from 'lucide-react-native';
 
 export default function GameLobby() {
   const router = useRouter();
@@ -75,39 +77,53 @@ export default function GameLobby() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.mainHeader}>Game Lobby</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <LinearGradient
+        colors={['#FFD700', '#FF69B4', '#4169E1']}
+        style={styles.container}
+      >
+        <View style={styles.gameWrapper}>
+          <Text style={styles.mainHeader}>Magical Gathering</Text>
+          <Sparkles style={styles.sparklesIcon} color="#FFD700" />
 
-      <View style={styles.gameIdContainer}>
-        <Text style={styles.gameIdLabel}>Game ID:</Text>
-        <Text style={styles.gameId}>{gameId}</Text>
-      </View>
+          <View style={styles.gameContainer}>
+            <View style={styles.gameIdContainer}>
+              <Text style={styles.gameIdLabel}>Realm Code:</Text>
+              <Text style={styles.gameId}>{gameId}</Text>
+            </View>
 
-      <View style={styles.playersListContainer}>
-        <Text style={styles.heading}>Players:</Text>
-        <FlatList
-          data={players}
-          renderItem={({ item }) => (
-            <Text style={styles.playerItem}>{item}</Text>
-          )}
-          keyExtractor={(item, index) => index.toString()}
-        />
-      </View>
+            <View style={styles.playersListContainer}>
+              <Text style={styles.heading}>Wizards Present:</Text>
+              <FlatList
+                data={players}
+                renderItem={({ item }) => (
+                  <View style={styles.playerItem}>
+                    <User color="#6A0DAD" size={24} style={styles.playerIcon} />
+                    <Text style={styles.playerName}>{item}</Text>
+                  </View>
+                )}
+                keyExtractor={(item, index) => index.toString()}
+              />
+            </View>
 
-      <View style={styles.buttonContainer}>
-        <CustomButton
-          style={[
-            styles.button,
-            (!isHost || players.length < 2) && styles.buttonDisabled,
-          ]}
-          onPress={startGame}
-          disabled={!isHost || players.length < 2}
-        >
-          <Text style={styles.buttonText}>
-            {isHost ? 'Start Game' : 'Waiting for host to start...'}
-          </Text>
-        </CustomButton>
-      </View>
-    </View>
+            <View style={styles.buttonContainer}>
+              <CustomButton
+                style={[
+                  styles.button,
+                  (!isHost || players.length < 2) && styles.buttonDisabled,
+                ]}
+                onPress={startGame}
+                disabled={!isHost || players.length < 2}
+              >
+                <PlayCircle color="#FFFFFF" size={24} style={styles.buttonIcon} />
+                <Text style={styles.buttonText}>
+                  {isHost ? 'Begin the Duel' : 'Awaiting the Archmage'}
+                </Text>
+              </CustomButton>
+            </View>
+          </View>
+        </View>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }

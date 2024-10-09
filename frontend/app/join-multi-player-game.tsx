@@ -1,5 +1,3 @@
-// JoinMultiPlayerGame.tsx
-
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -7,11 +5,14 @@ import {
   TextInput,
   StyleSheet,
   Alert,
+  SafeAreaView,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import styles from '../styles/styles';
 import { useWebSocket } from './WebSocketProvider';
 import CustomButton from '../components/CustomButton';
+import { LogIn } from 'lucide-react-native';
 
 const JoinMultiPlayerGame = () => {
   const router = useRouter();
@@ -39,7 +40,7 @@ const JoinMultiPlayerGame = () => {
               },
             });
           } else {
-            // Alert.alert('Error', data.message || 'Failed to join the game.');
+            Alert.alert('Magical Mishap', data.message || 'Failed to join the magical realm.');
           }
         }
       };
@@ -47,7 +48,7 @@ const JoinMultiPlayerGame = () => {
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
         setIsJoining(false);
-        Alert.alert('Error', 'Failed to connect to the game server.');
+        Alert.alert('Magical Mishap', 'Failed to connect to the enchanted realm.');
       };
     }
   }, [ws]);
@@ -108,52 +109,59 @@ const JoinMultiPlayerGame = () => {
         })
       );
     } else if (fullGameId.length !== 6) {
-      Alert.alert('Error', 'Please enter a complete 6-character Game ID');
+      Alert.alert('Magical Mishap', 'Please enter a complete 6-character Realm Code');
     } else if (isJoining) {
       // Do nothing if already joining
     } else {
       Alert.alert(
-        'Error',
-        'WebSocket is not connected. Please try again.'
+        'Magical Mishap',
+        'The magical connection is lost. Please try again.'
       );
     }
   };
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.mainHeader}>Join Game</Text>
-      <Text style={styles.heading}>Enter Game ID</Text>
-      <View style={localStyles.gameIdContainer}>
-        {gameId.map((char, index) => (
-          <TextInput
-            key={index}
-            ref={(ref) => (inputRefs.current[index] = ref)}
-            style={localStyles.input}
-            value={char}
-            onChangeText={(text) => handleInputChange(text, index)}
-            maxLength={6} // Allow pasting up to 6 characters
-            keyboardType="default"
-            autoCapitalize="characters"
-            onKeyPress={({ nativeEvent }) => {
-              if (nativeEvent.key === 'Backspace') {
-                handleBackspace(index);
-              }
-            }}
-          />
-        ))}
-      </View>
-      <View style={styles.buttonContainer}>
-        <CustomButton
-          style={[styles.button, isJoining && styles.buttonDisabled]}
-          onPress={() => joinGame(gameId.join(''))}
-          disabled={isJoining}
-        >
-          <Text style={styles.buttonText}>
-            {isJoining ? 'Joining...' : 'Join Game'}
-          </Text>
-        </CustomButton>
-      </View>
-    </View>
+    <SafeAreaView style={styles.safeArea}>
+      <LinearGradient
+        colors={['#FFD700', '#FF69B4', '#4169E1']}
+        style={styles.container}
+      >
+        <View style={styles.gameWrapper}>
+          <Text style={styles.mainHeader}>Join Magical Realm</Text>
+          <Text style={styles.heading}>Enter Realm Code</Text>
+          <View style={localStyles.gameIdContainer}>
+            {gameId.map((char, index) => (
+              <TextInput
+                key={index}
+                ref={(ref) => (inputRefs.current[index] = ref)}
+                style={localStyles.input}
+                value={char}
+                onChangeText={(text) => handleInputChange(text, index)}
+                maxLength={6} // Allow pasting up to 6 characters
+                keyboardType="default"
+                autoCapitalize="characters"
+                onKeyPress={({ nativeEvent }) => {
+                  if (nativeEvent.key === 'Backspace') {
+                    handleBackspace(index);
+                  }
+                }}
+              />
+            ))}
+          </View>
+          <View style={styles.buttonContainer}>
+            <CustomButton
+              style={[styles.button, isJoining && styles.buttonDisabled]}
+              onPress={() => joinGame(gameId.join(''))}
+              disabled={isJoining}
+            >
+              <LogIn color="#FFFFFF" size={24} style={styles.buttonIcon} />
+              <Text style={styles.buttonText}>
+                {isJoining ? 'Entering Realm...' : 'Enter Magical Realm'}
+              </Text>
+            </CustomButton>
+          </View>
+        </View>
+      </LinearGradient>
+    </SafeAreaView>
   );
 };
 
@@ -166,12 +174,14 @@ const localStyles = StyleSheet.create({
   input: {
     width: 40,
     height: 50,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: '#FF69B4',
+    borderRadius: 10,
     textAlign: 'center',
     fontSize: 24,
     marginHorizontal: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    color: '#4A0E4E',
   },
 });
 

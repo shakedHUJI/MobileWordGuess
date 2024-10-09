@@ -1,12 +1,12 @@
-// MultiPlayerSelection.tsx
-
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Alert, Platform } from 'react-native';
+import { View, Text, TextInput, Alert, Platform, SafeAreaView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import styles from '../styles/styles';
 import { useRouter } from 'expo-router';
 import { useWebSocket } from './WebSocketProvider';
 import WebAlert from '../components/WebAlert';
 import CustomButton from '../components/CustomButton';
+import { Wand2, Users } from 'lucide-react-native';
 
 export default function MultiPlayerSelection() {
   const router = useRouter();
@@ -56,7 +56,7 @@ export default function MultiPlayerSelection() {
         showAlert('Not connected to the game server. Please try again.');
       }
     } else {
-      showAlert('Enter you name dummy!');
+      showAlert('Please enter your wizard name!');
     }
   };
 
@@ -67,47 +67,53 @@ export default function MultiPlayerSelection() {
         params: { playerName: playerName.trim() },
       });
     } else {
-      showAlert('Enter you name dummy!');
+      showAlert('Please enter your wizard name!');
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.mainHeader}>2-Player Mode</Text>
-      <View style={styles.modeSelectionContainer}>
-        <Text style={styles.heading}>Select Option</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <LinearGradient
+        colors={['#FFD700', '#FF69B4', '#4169E1']}
+        style={styles.container}
+      >
+        <View style={styles.gameWrapper}>
+          <Text style={styles.mainHeader}>Wizard Duel</Text>
+          <View style={styles.modeSelectionContainer}>
+            <Text style={styles.heading}>Choose Your Path</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Your Name"
-          placeholderTextColor="#888"
-          value={playerName}
-          onChangeText={setPlayerName}
-        />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Your Wizard Name"
+              placeholderTextColor="#888"
+              value={playerName}
+              onChangeText={setPlayerName}
+            />
 
-        <View style={styles.buttonContainer}>
-          <CustomButton style={styles.button} onPress={createGame}>
-            <Text style={styles.buttonText}>Create Game</Text>
-          </CustomButton>
+            <View style={styles.buttonContainer}>
+              <CustomButton style={styles.button} onPress={createGame}>
+                <Wand2 color="#FFFFFF" size={24} style={styles.buttonIcon} />
+                <Text style={styles.buttonText}>Create Magical Realm</Text>
+              </CustomButton>
+            </View>
+            <View style={styles.buttonContainer}>
+              <CustomButton style={styles.button} onPress={joinGame}>
+                <Users color="#FFFFFF" size={24} style={styles.buttonIcon} />
+                <Text style={styles.buttonText}>Join Existing Realm</Text>
+              </CustomButton>
+            </View>
+          </View>
         </View>
-        <View style={styles.buttonContainer}>
-          <CustomButton
-            style={styles.button}
-            onPress={joinGame}
-          >
-            <Text style={styles.buttonText}>Join Game</Text>
-          </CustomButton>
-        </View>
-      </View>
+      </LinearGradient>
 
       {Platform.OS === 'web' && (
         <WebAlert
           visible={webAlertVisible}
-          title="Error"
+          title="Magical Mishap"
           message={webAlertMessage}
           onClose={() => setWebAlertVisible(false)}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
