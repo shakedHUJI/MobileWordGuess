@@ -1,13 +1,50 @@
-// GameLobby.tsx
-
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, Alert, SafeAreaView } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import CustomButton from '../components/CustomButton';
 import styles from '../styles/styles';
 import { useWebSocket } from './WebSocketProvider';
-import { PlayCircle, User, Sparkles } from 'lucide-react-native';
+import { Zap, User, PlayCircle } from 'lucide-react-native';
+import { MotiView } from 'moti';
+
+const AnimatedBackground = React.memo(() => {
+  return (
+    <>
+      {[...Array(20)].map((_, index) => (
+        <MotiView
+          key={index}
+          from={{
+            opacity: 0,
+            scale: 1,
+          }}
+          animate={{
+            opacity: [0, 1, 0],
+            scale: [1, 1.5, 1],
+          }}
+          transition={{
+            type: 'timing',
+            duration: 3000,
+            loop: true,
+            delay: index * 200,
+            repeatReverse: false,
+          }}
+          style={[
+            styles.animatedBackground,
+            {
+              width: 10,
+              height: 10,
+              borderRadius: 5,
+              backgroundColor: '#00FFFF',
+              position: 'absolute',
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+            },
+          ]}
+        />
+      ))}
+    </>
+  );
+});
 
 export default function GameLobby() {
   const router = useRouter();
@@ -30,14 +67,12 @@ export default function GameLobby() {
 
   useEffect(() => {
     if (ws && ws.readyState === WebSocket.OPEN) {
-      // Send a message to join the lobby
       ws.send(JSON.stringify({ action: 'join_lobby', gameId, playerName }));
 
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
 
         if (data.action === 'join_game_response') {
-          // Update the isHost state based on the server response
           setIsHost(data.isHost);
           setPlayers(data.players);
         } else if (data.action === 'player_joined') {
@@ -50,7 +85,6 @@ export default function GameLobby() {
         } else if (data.action === 'player_left') {
           setPlayers(data.players);
         } else if (data.action === 'return_to_lobby') {
-          // Update players list and host status when returning to lobby
           setPlayers(data.players);
           setIsHost(data.host === playerName);
         }
@@ -58,7 +92,7 @@ export default function GameLobby() {
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
-        Alert.alert('Error', 'Lost connection to the game server.');
+        Alert.alert('Error', 'Lost connection to the AI arena server.');
       };
     }
   }, [ws]);
@@ -70,7 +104,7 @@ export default function GameLobby() {
       } else {
         Alert.alert(
           'Error',
-          'Not connected to the game server. Please try again.'
+          'Not connected to the AI arena server. Please try again.'
         );
       }
     }
@@ -78,27 +112,30 @@ export default function GameLobby() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <LinearGradient
-        colors={['#FFD700', '#FF69B4', '#4169E1']}
-        style={styles.container}
-      >
-        <View style={styles.gameWrapper}>
-          <Text style={styles.mainHeader}>Magical Gathering</Text>
-          <Sparkles style={styles.sparklesIcon} color="#FFD700" />
+      <View style={styles.container}>
+        <AnimatedBackground />
+        <MotiView
+          from={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'timing', duration: 1000 }}
+          style={styles.gameWrapper}
+        >
+          <Text style={styles.mainHeader}>AI Arena</Text>
+          <Zap style={styles.sparklesIcon} color="#00FFFF" size={32} />
 
           <View style={styles.gameContainer}>
             <View style={styles.gameIdContainer}>
-              <Text style={styles.gameIdLabel}>Realm Code:</Text>
+              <Text style={styles.gameIdLabel}>Arena Code:</Text>
               <Text style={styles.gameId}>{gameId}</Text>
             </View>
 
             <View style={styles.playersListContainer}>
-              <Text style={styles.heading}>Wizards Present:</Text>
+              <Text style={styles.heading}>AI Challengers:</Text>
               <FlatList
                 data={players}
                 renderItem={({ item }) => (
                   <View style={styles.playerItem}>
-                    <User color="#6A0DAD" size={24} style={styles.playerIcon} />
+                    <User color="#FF00FF" size={24} style={styles.playerIcon} />
                     <Text style={styles.playerName}>{item}</Text>
                   </View>
                 )}
@@ -115,15 +152,15 @@ export default function GameLobby() {
                 onPress={startGame}
                 disabled={!isHost || players.length < 2}
               >
-                <PlayCircle color="#FFFFFF" size={24} style={styles.buttonIcon} />
+                <PlayCircle color="#1E2A3A" size={24} style={styles.buttonIcon} />
                 <Text style={styles.buttonText}>
-                  {isHost ? 'Begin the Duel' : 'Awaiting the Archmage'}
+                  {isHost ? 'Initiate AI Battle' : 'Awaiting Arena Master'}
                 </Text>
               </CustomButton>
             </View>
           </View>
-        </View>
-      </LinearGradient>
+        </MotiView>
+      </View>
     </SafeAreaView>
   );
 }

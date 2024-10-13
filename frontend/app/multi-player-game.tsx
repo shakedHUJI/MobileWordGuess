@@ -8,19 +8,57 @@ import {
   Alert,
   Modal,
   FlatList,
-  Dimensions,
   ActivityIndicator,
   SafeAreaView,
+  ScrollView,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import styles from '../styles/styles';
-import ConfettiCannon from 'react-native-confetti-cannon';
+import ConfettiCannon from 'react-native-confetti-cannon'; // Ensure this import is correct
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useWebSocket } from './WebSocketProvider';
 import CustomButton from '../components/CustomButton';
-import { Sparkles, Star, Lightbulb, Send, History, X } from 'lucide-react-native';
+import { Zap, Star, Cpu, Send, History, X } from 'lucide-react-native';
+import { MotiView } from 'moti';
+import AnimatedEmojiBackground from '../components/AnimatedEmojiBackground';
 
-const { width, height } = Dimensions.get('window');
+const AnimatedBackground = React.memo(() => {
+  return (
+    <>
+      {[...Array(20)].map((_, index) => (
+        <MotiView
+          key={index}
+          from={{
+            opacity: 0,
+            scale: 1,
+          }}
+          animate={{
+            opacity: [0, 1, 0],
+            scale: [1, 1.5, 1],
+          }}
+          transition={{
+            type: 'timing',
+            duration: 3000,
+            loop: true,
+            delay: index * 200,
+            repeatReverse: false,
+          }}
+          style={[
+            styles.animatedBackground,
+            {
+              width: 10,
+              height: 10,
+              borderRadius: 5,
+              backgroundColor: '#00FFFF',
+              position: 'absolute',
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+            },
+          ]}
+        />
+      ))}
+    </>
+  );
+});
 
 export default function MultiPlayerGame() {
   const router = useRouter();
@@ -37,9 +75,7 @@ export default function MultiPlayerGame() {
   const [isSubmitDisabled, setIsSubmitDisabled] = useState<boolean>(
     initialCurrentPlayer !== playerName
   );
-  const [emojiBackground, setEmojiBackground] = useState<boolean>(false);
   const [response, setResponse] = useState<string>('');
-  const [emoji, setEmoji] = useState<string>('');
   const [history, setHistory] = useState<
     { player?: string; guess: string; response: string }[]
   >([]);
@@ -48,11 +84,13 @@ export default function MultiPlayerGame() {
   const [guessCount, setGuessCount] = useState<number>(0);
   const [isSideMenuVisible, setIsSideMenuVisible] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [showFirstGuessMessage, setShowFirstGuessMessage] = useState<boolean>(true);
+  const [showFirstGuessMessage, setShowFirstGuessMessage] = useState<boolean>(initialCurrentPlayer === playerName);
+  const [emoji, setEmoji] = useState<string>('');
+  const [showEmojiBackground, setShowEmojiBackground] = useState(false);
 
   const confettiRef = useRef<any>(null);
   const { ws } = useWebSocket();
-  
+
   useEffect(() => {
     if (ws) {
       ws.onmessage = (event) => {
@@ -61,14 +99,6 @@ export default function MultiPlayerGame() {
       };
     }
   }, [ws]);
-
-  useEffect(() => {
-    if (emoji) {
-      setEmojiBackground(true);
-    } else {
-      setEmojiBackground(false);
-    }
-  }, [emoji]);
 
   const handleGameStateUpdate = (data: any) => {
     console.log('Received WebSocket message:', data);
@@ -93,7 +123,6 @@ export default function MultiPlayerGame() {
       setUserGuess('');
       setGuessCount(0);
       setHistory([]);
-      setEmoji('');
       setIsSubmitDisabled(data.currentPlayer !== playerName);
       setTurnIndicator(
         data.currentPlayer === playerName ? "It's your turn!" : `It's ${data.currentPlayer}'s turn.`
@@ -127,18 +156,23 @@ export default function MultiPlayerGame() {
     setUserGuess('');
     setShowFirstGuessMessage(false);
 
+    if (data.emoji) {
+      setEmoji(data.emoji);
+      setShowEmojiBackground(true);
+      // Hide the emoji background after 3 seconds
+      setTimeout(() => setShowEmojiBackground(false), 3000);
+    }
+
     if (data.action === 'correct_guess') {
       setIsGameOver(true);
       if (data.player === playerName) {
         setIsGameWon(true);
-        setEmoji(data.winnerEmoji);
+        setEmoji('🥳');
         confettiRef.current && confettiRef.current.start();
       } else {
         setIsGameWon(false);
-        setEmoji(data.loserEmoji);
+        setEmoji('🫠');
       }
-    } else {
-      setEmoji(data.emoji);
     }
     setIsLoading(false);
   };
@@ -169,9 +203,7 @@ export default function MultiPlayerGame() {
     setUserGuess('');
     setGuessCount(0);
     setHistory([]);
-    setEmoji('');
     setIsSubmitDisabled(false);
-    setEmojiBackground(false);
     setShowFirstGuessMessage(true);
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(
@@ -189,43 +221,47 @@ export default function MultiPlayerGame() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <LinearGradient
-        colors={['#FFD700', '#FF69B4', '#4169E1']}
-        style={styles.container}
-      >
-        <View style={styles.gameWrapper}>
-          <Text style={styles.mainHeader}>Word Wizardry!</Text>
-          <Sparkles style={styles.sparklesIcon} color="#FFD700" />
+      <View style={styles.container}>
+        <AnimatedBackground />
+        <AnimatedEmojiBackground emoji={emoji} visible={showEmojiBackground} />
+        <MotiView
+          from={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'timing', duration: 1000 }}
+          style={styles.gameWrapper}
+        >
+          <Text style={styles.mainHeader}>AI Showdown</Text>
+          <Zap style={styles.sparklesIcon} color="#1E2A3A" size={32} />
 
           <View style={styles.gameContainer}>
             {isGameOver ? (
               isGameWon ? (
                 <View style={styles.congratsContent}>
-                  <Text style={styles.celebrateEmoji}>{emoji}</Text>
+                  <Text style={styles.celebrateEmoji}>{emoji || '🥳'}</Text>
                   <Text style={styles.congratsMessage}>
-                    Magical! You've uncovered the secret word!
+                    Victory! You've outsmarted the AI!
                   </Text>
                   <View style={styles.buttonContainer}>
                     <CustomButton style={styles.button} onPress={resetGameState}>
-                      <Text style={styles.buttonText}>Cast Another Spell</Text>
+                      <Text style={styles.buttonText}>Start New Battle</Text>
                     </CustomButton>
                     <CustomButton style={styles.button} onPress={() => router.push('/')}>
-                      <Text style={styles.buttonText}>Return to Wizard's Tower</Text>
+                      <Text style={styles.buttonText}>Return to Command Center</Text>
                     </CustomButton>
                   </View>
                 </View>
               ) : (
                 <View style={styles.congratsContent}>
-                  <Text style={styles.celebrateEmoji}>{emoji}</Text>
+                  <Text style={styles.celebrateEmoji}>{emoji || '🫠'}</Text>
                   <Text style={styles.congratsMessage}>
-                    The spell is broken! {history[history.length - 1].player} discovered the word.
+                    The AI prevails! {history[history.length - 1].player} cracked the code.
                   </Text>
                   <View style={styles.buttonContainer}>
                     <CustomButton style={styles.button} onPress={resetGameState}>
-                      <Text style={styles.buttonText}>Try Another Incantation</Text>
+                      <Text style={styles.buttonText}>Attempt Rematch</Text>
                     </CustomButton>
                     <CustomButton style={styles.button} onPress={() => router.push('/')}>
-                      <Text style={styles.buttonText}>Return to Wizard's Tower</Text>
+                      <Text style={styles.buttonText}>Return to Command Center</Text>
                     </CustomButton>
                   </View>
                 </View>
@@ -235,49 +271,58 @@ export default function MultiPlayerGame() {
                 {turnIndicator ? (
                   <Text style={styles.turnIndicator}>{turnIndicator}</Text>
                 ) : null}
-                {showFirstGuessMessage && (
-                  <Text style={styles.firstGuessMessage}>Be the first to cast a spell!</Text>
+                {showFirstGuessMessage && currentPlayer === playerName && (
+                  <Text style={styles.firstGuessMessage}>
+                    Be the first to challenge the AI!
+                  </Text>
                 )}
                 <View style={styles.inputContainer}>
                   <TextInput
                     style={styles.input}
-                    placeholder="Whisper your magical guess..."
+                    placeholder="Enter your guess..."
                     placeholderTextColor="#888"
                     value={userGuess}
                     onChangeText={setUserGuess}
                     editable={!isSubmitDisabled && !isLoading}
                   />
                   <CustomButton
-                    style={[styles.sendButton, (isSubmitDisabled || isLoading) && styles.buttonDisabled]}
+                    style={[
+                      styles.sendButton,
+                      (isSubmitDisabled || isLoading) && styles.buttonDisabled,
+                    ]}
                     onPress={handleGuessSubmission}
                     disabled={isSubmitDisabled || isLoading}
                   >
-                    <Send color="#FFFFFF" size={24} />
+                    <Send color="#1E2A3A" size={24} />
                   </CustomButton>
                 </View>
-                <Text style={styles.guessCounter}>Magical Attempts: {guessCount}</Text>
+                <Text style={styles.guessCounter}>Total Challenges: {guessCount}</Text>
                 {isLoading ? (
                   <View style={styles.loadingContainer}>
-                    <ActivityIndicator size={70} color="#40798C" />
-                    <Text style={styles.loadingText}>Conjuring response...</Text>
+                    <ActivityIndicator size={70} color="#00FFFF" />
+                    <Text style={styles.loadingText}>AI Processing...</Text>
                   </View>
                 ) : history.length > 0 ? (
-                  <View style={styles.latestMessageContainer}>
+                  <ScrollView
+                    style={styles.latestMessageContainer}
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                  >
                     <View style={styles.guessBubble}>
                       <Text style={styles.messageText}>
                         <Text style={styles.boldText}>
-                          {history[history.length - 1].player}'s Spell:
+                          {history[history.length - 1].player}'s Challenge:
                         </Text>{' '}
                         {history[history.length - 1].guess}
                       </Text>
                     </View>
                     <View style={styles.responseBubble}>
                       <Text style={styles.messageText}>
-                        <Text style={styles.boldText}>Crystal Ball Says:</Text>{' '}
+                        <Text style={styles.boldText}>AI Response:</Text>{' '}
                         {history[history.length - 1].response}
                       </Text>
                     </View>
-                  </View>
+                  </ScrollView>
                 ) : null}
               </View>
             )}
@@ -289,9 +334,9 @@ export default function MultiPlayerGame() {
                 style={styles.historyButton}
                 onPress={() => setIsSideMenuVisible(!isSideMenuVisible)}
               >
-                <History color="#FFFFFF" size={24} />
+                <History color="#1E2A3A" size={24} />
                 <Text style={styles.historyButtonText}>
-                  {isSideMenuVisible ? 'Hide Spell History' : 'Show Spell History'}
+                  {isSideMenuVisible ? 'Hide Challenge History' : 'Show Challenge History'}
                 </Text>
               </CustomButton>
             </View>
@@ -306,26 +351,28 @@ export default function MultiPlayerGame() {
               ref={confettiRef}
             />
           )}
+        </MotiView>
 
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={isSideMenuVisible}
-            onRequestClose={() => {
-              setIsSideMenuVisible(false);
-            }}
-          >
-            <View style={styles.modalOverlay}>
-              <View style={styles.sideMenuContent}>
-                <View style={styles.modalHeader}>
-                  <Text style={styles.heading}>Spell History</Text>
-                  <CustomButton
-                    style={styles.closeButton}
-                    onPress={() => setIsSideMenuVisible(false)}
-                  >
-                    <X color="#FFFFFF" size={24} />
-                  </CustomButton>
-                </View>
+        <Modal
+          animationType="slide"
+          transparent={false}
+          visible={isSideMenuVisible}
+          onRequestClose={() => {
+            setIsSideMenuVisible(false);
+          }}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.sideMenuContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.heading}>Challenge History</Text>
+                <CustomButton
+                  style={styles.closeButton}
+                  onPress={() => setIsSideMenuVisible(false)}
+                >
+                  <X color="#1E2A3A" size={24} />
+                </CustomButton>
+              </View>
+              <View style={{ flex: 1 }}>
                 <FlatList
                   data={history}
                   keyExtractor={(_, index) => index.toString()}
@@ -334,25 +381,26 @@ export default function MultiPlayerGame() {
                       <View style={styles.guessBubble}>
                         <Text style={styles.messageText}>
                           <Text style={styles.boldText}>
-                            {item.player ? `${item.player}'s` : 'Your'} Spell:
+                            {item.player ? `${item.player}'s` : 'Your'} Challenge:
                           </Text>{' '}
                           {item.guess}
                         </Text>
                       </View>
                       <View style={styles.responseBubble}>
                         <Text style={styles.messageText}>
-                          <Text style={styles.boldText}>Crystal Ball:</Text> {item.response}
+                          <Text style={styles.boldText}>AI Response:</Text> {item.response}
                         </Text>
                       </View>
                     </View>
                   )}
                   style={styles.messageContainer}
+                  contentContainerStyle={{ flexGrow: 1 }}
                 />
               </View>
             </View>
-          </Modal>
-        </View>
-      </LinearGradient>
+          </View>
+        </Modal>
+      </View>
     </SafeAreaView>
   );
 }

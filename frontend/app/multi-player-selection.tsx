@@ -1,19 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Alert, Platform, SafeAreaView } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, TextInput, Alert, SafeAreaView, Platform } from 'react-native';
 import styles from '../styles/styles';
 import { useRouter } from 'expo-router';
 import { useWebSocket } from './WebSocketProvider';
-import WebAlert from '../components/WebAlert';
 import CustomButton from '../components/CustomButton';
-import { Wand2, Users } from 'lucide-react-native';
+import { Zap, Wand2, Users } from 'lucide-react-native';
+import { MotiView } from 'moti';
+
+const AnimatedBackground = React.memo(() => {
+  return (
+    <>
+      {[...Array(20)].map((_, index) => (
+        <MotiView
+          key={index}
+          from={{
+            opacity: 0,
+            scale: 1,
+          }}
+          animate={{
+            opacity: [0, 1, 0],
+            scale: [1, 1.5, 1],
+          }}
+          transition={{
+            type: 'timing',
+            duration: 3000,
+            loop: true,
+            delay: index * 200,
+            repeatReverse: false,
+          }}
+          style={[
+            styles.animatedBackground,
+            {
+              width: 10,
+              height: 10,
+              borderRadius: 5,
+              backgroundColor: '#00FFFF',
+              position: 'absolute',
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+            },
+          ]}
+        />
+      ))}
+    </>
+  );
+});
 
 export default function MultiPlayerSelection() {
   const router = useRouter();
   const [playerName, setPlayerName] = useState<string>('');
   const { ws, isConnected } = useWebSocket();
-  const [webAlertVisible, setWebAlertVisible] = useState(false);
-  const [webAlertMessage, setWebAlertMessage] = useState('');
 
   useEffect(() => {
     if (isConnected && ws) {
@@ -36,10 +72,9 @@ export default function MultiPlayerSelection() {
 
   const showAlert = (message: string) => {
     if (Platform.OS === 'web') {
-      setWebAlertMessage(message);
-      setWebAlertVisible(true);
+      window.alert(message);
     } else {
-      Alert.alert('Error', message);
+      Alert.alert('Alert', message);
     }
   };
 
@@ -56,7 +91,7 @@ export default function MultiPlayerSelection() {
         showAlert('Not connected to the game server. Please try again.');
       }
     } else {
-      showAlert('Please enter your wizard name!');
+      showAlert('Please enter your codename!');
     }
   };
 
@@ -67,24 +102,29 @@ export default function MultiPlayerSelection() {
         params: { playerName: playerName.trim() },
       });
     } else {
-      showAlert('Please enter your wizard name!');
+      showAlert('Please enter your codename!');
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <LinearGradient
-        colors={['#FFD700', '#FF69B4', '#4169E1']}
-        style={styles.container}
-      >
-        <View style={styles.gameWrapper}>
-          <Text style={styles.mainHeader}>Wizard Duel</Text>
-          <View style={styles.modeSelectionContainer}>
+      <View style={styles.container}>
+        <AnimatedBackground />
+        <MotiView
+          from={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'timing', duration: 1000 }}
+          style={styles.gameWrapper}
+        >
+          <Text style={styles.mainHeader}>AI Showdown</Text>
+          <Zap style={styles.sparklesIcon} color="#1E2A3A" size={32} />
+
+          <View style={styles.gameContainer}>
             <Text style={styles.heading}>Choose Your Path</Text>
 
             <TextInput
-              style={styles.input}
-              placeholder="Enter Your Wizard Name"
+              style={styles.wizardNameInput}
+              placeholder="Enter Your Codename"
               placeholderTextColor="#888"
               value={playerName}
               onChangeText={setPlayerName}
@@ -92,28 +132,19 @@ export default function MultiPlayerSelection() {
 
             <View style={styles.buttonContainer}>
               <CustomButton style={styles.button} onPress={createGame}>
-                <Wand2 color="#FFFFFF" size={24} style={styles.buttonIcon} />
-                <Text style={styles.buttonText}>Create Magical Realm</Text>
+                <Wand2 color="#1E2A3A" size={24} style={styles.buttonIcon} />
+                <Text style={styles.buttonText}>Create AI Arena</Text>
               </CustomButton>
             </View>
             <View style={styles.buttonContainer}>
               <CustomButton style={styles.button} onPress={joinGame}>
-                <Users color="#FFFFFF" size={24} style={styles.buttonIcon} />
-                <Text style={styles.buttonText}>Join Existing Realm</Text>
+                <Users color="#1E2A3A" size={24} style={styles.buttonIcon} />
+                <Text style={styles.buttonText}>Join Existing Arena</Text>
               </CustomButton>
             </View>
           </View>
-        </View>
-      </LinearGradient>
-
-      {Platform.OS === 'web' && (
-        <WebAlert
-          visible={webAlertVisible}
-          title="Magical Mishap"
-          message={webAlertMessage}
-          onClose={() => setWebAlertVisible(false)}
-        />
-      )}
+        </MotiView>
+      </View>
     </SafeAreaView>
   );
 }

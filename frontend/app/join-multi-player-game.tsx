@@ -13,6 +13,48 @@ import styles from '../styles/styles';
 import { useWebSocket } from './WebSocketProvider';
 import CustomButton from '../components/CustomButton';
 import { LogIn } from 'lucide-react-native';
+import { Zap } from 'lucide-react-native';
+import { MotiView } from 'moti';
+
+
+const AnimatedBackground = React.memo(() => {
+  return (
+    <>
+      {[...Array(20)].map((_, index) => (
+        <MotiView
+          key={index}
+          from={{
+            opacity: 0,
+            scale: 1,
+          }}
+          animate={{
+            opacity: [0, 1, 0],
+            scale: [1, 1.5, 1],
+          }}
+          transition={{
+            type: 'timing',
+            duration: 3000,
+            loop: true,
+            delay: index * 200,
+            repeatReverse: false,
+          }}
+          style={[
+            styles.animatedBackground,
+            {
+              width: 10,
+              height: 10,
+              borderRadius: 5,
+              backgroundColor: '#00FFFF',
+              position: 'absolute',
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+            },
+          ]}
+        />
+      ))}
+    </>
+  );
+});
 
 const JoinMultiPlayerGame = () => {
   const router = useRouter();
@@ -121,46 +163,53 @@ const JoinMultiPlayerGame = () => {
   };
   return (
     <SafeAreaView style={styles.safeArea}>
-      <LinearGradient
-        colors={['#FFD700', '#FF69B4', '#4169E1']}
-        style={styles.container}
-      >
-        <View style={styles.gameWrapper}>
-          <Text style={styles.mainHeader}>Join Magical Realm</Text>
-          <Text style={styles.heading}>Enter Realm Code</Text>
-          <View style={localStyles.gameIdContainer}>
-            {gameId.map((char, index) => (
-              <TextInput
-                key={index}
-                ref={(ref) => (inputRefs.current[index] = ref)}
-                style={localStyles.input}
-                value={char}
-                onChangeText={(text) => handleInputChange(text, index)}
-                maxLength={6} // Allow pasting up to 6 characters
-                keyboardType="default"
-                autoCapitalize="characters"
-                onKeyPress={({ nativeEvent }) => {
-                  if (nativeEvent.key === 'Backspace') {
-                    handleBackspace(index);
-                  }
-                }}
-              />
-            ))}
+      <View style={styles.container}>
+        <AnimatedBackground />
+        <MotiView
+          from={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'timing', duration: 1000 }}
+          style={styles.gameWrapper}
+        >
+          <Text style={styles.mainHeader}>Join AI Arena</Text>
+          <Zap style={styles.sparklesIcon} color="#1E2A3A" size={32} />
+
+          <View style={styles.gameContainer}>
+            <Text style={styles.heading}>Enter Arena Code</Text>
+            <View style={localStyles.gameIdContainer}>
+              {gameId.map((char, index) => (
+                <TextInput
+                  key={index}
+                  ref={(ref) => (inputRefs.current[index] = ref)}
+                  style={localStyles.input}
+                  value={char}
+                  onChangeText={(text) => handleInputChange(text, index)}
+                  maxLength={6} // Allow pasting up to 6 characters
+                  keyboardType="default"
+                  autoCapitalize="characters"
+                  onKeyPress={({ nativeEvent }) => {
+                    if (nativeEvent.key === 'Backspace') {
+                      handleBackspace(index);
+                    }
+                  }}
+                />
+              ))}
+            </View>
+            <View style={styles.buttonContainer}>
+              <CustomButton
+                style={[styles.button, isJoining && styles.buttonDisabled]}
+                onPress={() => joinGame(gameId.join(''))}
+                disabled={isJoining}
+              >
+                <LogIn color="#1E2A3A" size={24} style={styles.buttonIcon} />
+                <Text style={styles.buttonText}>
+                  {isJoining ? 'Joining Arena...' : 'Enter AI Arena'}
+                </Text>
+              </CustomButton>
+            </View>
           </View>
-          <View style={styles.buttonContainer}>
-            <CustomButton
-              style={[styles.button, isJoining && styles.buttonDisabled]}
-              onPress={() => joinGame(gameId.join(''))}
-              disabled={isJoining}
-            >
-              <LogIn color="#FFFFFF" size={24} style={styles.buttonIcon} />
-              <Text style={styles.buttonText}>
-                {isJoining ? 'Entering Realm...' : 'Enter Magical Realm'}
-              </Text>
-            </CustomButton>
-          </View>
-        </View>
-      </LinearGradient>
+        </MotiView>
+      </View>
     </SafeAreaView>
   );
 };
