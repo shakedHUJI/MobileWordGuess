@@ -15,9 +15,10 @@ import {
 import styles from '../styles/styles';
 import { useRouter } from 'expo-router';
 import CustomButton from '../components/CustomButton';
-import { Zap, Send, History, X, Wand2 } from 'lucide-react-native';
+import { Zap, Send, History, X, Wand2, ArrowLeft } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import BackButton from '../components/BackButton';
 
 // Remove the import of AnimatedEmojiBackground
 // import AnimatedEmojiBackground from '../components/AnimatedEmojiBackground';
@@ -75,7 +76,7 @@ export default function SinglePlayerGame() {
   const [guessCount, setGuessCount] = useState<number>(0);
   const [userGuess, setUserGuess] = useState<string>('');
   const [response, setResponse] = useState<string>('');
-  const [emoji, setEmoji] = useState<string>(''); // Initialize emoji state
+  const [emoji, setEmoji] = useState<string>('');
   const [history, setHistory] = useState<{ guess: string; response: string }[]>([]);
   const [isGameWon, setIsGameWon] = useState<boolean>(false);
   const [isGameOver, setIsGameOver] = useState<boolean>(false);
@@ -133,7 +134,7 @@ export default function SinglePlayerGame() {
     ]);
 
     setResponse(data.response);
-    setEmoji(data.emoji || ''); // Update the emoji state
+    setEmoji(data.emoji || '');
 
     if (data.response && data.response.includes('Congratulations!')) {
       setIsGameWon(true);
@@ -179,8 +180,7 @@ export default function SinglePlayerGame() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <AnimatedBackground emoji={emoji} />
-        {/* Remove the AnimatedEmojiBackground component */}
-        {/* <AnimatedEmojiBackground emoji={emoji} visible={showEmojiBackground} /> */}
+        <BackButton shouldConfirm={true} />
         <MotiView
           from={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -206,7 +206,7 @@ export default function SinglePlayerGame() {
                       <Wand2 color="#1E2A3A" size={24} style={styles.buttonIcon} />
                       <Text style={styles.buttonText}>Start New Challenge</Text>
                     </CustomButton>
-                    <CustomButton style={styles.button} onPress={() => router.push('/')}>
+                    <CustomButton style={styles.button} onPress={() => router.replace('/')}>
                       <Text style={styles.buttonText}>Return to Main Menu</Text>
                     </CustomButton>
                   </View>
@@ -222,7 +222,7 @@ export default function SinglePlayerGame() {
                       <Wand2 color="#1E2A3A" size={24} style={styles.buttonIcon} />
                       <Text style={styles.buttonText}>Try Again</Text>
                     </CustomButton>
-                    <CustomButton style={styles.button} onPress={() => router.push('/')}>
+                    <CustomButton style={styles.button} onPress={() => router.replace('/')}>
                       <Text style={styles.buttonText}>Return to Main Menu</Text>
                     </CustomButton>
                   </View>

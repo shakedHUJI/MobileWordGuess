@@ -6,6 +6,7 @@ import { useWebSocket } from './WebSocketProvider';
 import CustomButton from '../components/CustomButton';
 import { Zap, Wand2, Users } from 'lucide-react-native';
 import { MotiView } from 'moti';
+import BackButton from '../components/BackButton';
 
 const AnimatedBackground = React.memo(() => {
   return (
@@ -110,6 +111,7 @@ export default function MultiPlayerSelection() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <AnimatedBackground />
+        <BackButton shouldConfirm={false} goToIndex={true} />
         <MotiView
           from={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}

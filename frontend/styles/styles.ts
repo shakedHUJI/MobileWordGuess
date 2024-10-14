@@ -1,6 +1,6 @@
 // styles.ts
 
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -370,6 +370,13 @@ const styles = StyleSheet.create({
   },
   emojiText: {
     fontSize: 30, // Adjust the size as needed
+  },
+  backButton: {
+    position: 'absolute',
+    top: 30,
+    left: 10,
+    zIndex: 10,
+    padding: 10,
   },
 });
 
