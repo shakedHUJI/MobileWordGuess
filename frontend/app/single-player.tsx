@@ -17,44 +17,54 @@ import { useRouter } from 'expo-router';
 import CustomButton from '../components/CustomButton';
 import { Zap, Send, History, X, Wand2 } from 'lucide-react-native';
 import { MotiView } from 'moti';
-import ConfettiCannon from 'react-native-confetti-cannon'; // Ensure this import is correct
-import AnimatedEmojiBackground from '../components/AnimatedEmojiBackground';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
-const AnimatedBackground = React.memo(() => {
+// Remove the import of AnimatedEmojiBackground
+// import AnimatedEmojiBackground from '../components/AnimatedEmojiBackground';
+
+// Define the props type for AnimatedBackground
+interface AnimatedBackgroundProps {
+  emoji: string;
+}
+
+const AnimatedBackground: React.FC<AnimatedBackgroundProps> = React.memo(({ emoji }) => {
   return (
     <>
-      {[...Array(20)].map((_, index) => (
-        <MotiView
-          key={index}
-          from={{
-            opacity: 0,
-            scale: 1,
-          }}
-          animate={{
-            opacity: [0, 1, 0],
-            scale: [1, 1.5, 1],
-          }}
-          transition={{
-            type: 'timing',
-            duration: 3000,
-            loop: true,
-            delay: index * 200,
-            repeatReverse: false,
-          }}
-          style={[
-            styles.animatedBackground,
-            {
-              width: 10,
-              height: 10,
-              borderRadius: 5,
-              backgroundColor: '#00FFFF',
-              position: 'absolute',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-            },
-          ]}
-        />
-      ))}
+      {[...Array(20)].map((_, index) => {
+        const randomTop = Math.random() * 100;
+        const randomLeft = Math.random() * 100;
+
+        return (
+          <MotiView
+            key={index}
+            from={{
+              opacity: 0,
+              scale: 0.5,
+            }}
+            animate={{
+              opacity: [0, 1, 0],
+              scale: [0.5, 1.5, 0.5],
+            }}
+            transition={{
+              type: 'timing',
+              duration: 3000,
+              loop: true,
+              delay: index * 200,
+              repeatReverse: false,
+            }}
+            style={[
+              styles.animatedEmoji,
+              {
+                position: 'absolute',
+                top: `${randomTop}%`,
+                left: `${randomLeft}%`,
+              },
+            ]}
+          >
+            <Text style={styles.emojiText}>{emoji || '✨'}</Text>
+          </MotiView>
+        );
+      })}
     </>
   );
 });
@@ -65,8 +75,7 @@ export default function SinglePlayerGame() {
   const [guessCount, setGuessCount] = useState<number>(0);
   const [userGuess, setUserGuess] = useState<string>('');
   const [response, setResponse] = useState<string>('');
-  const [emoji, setEmoji] = useState<string>('');
-  const [showEmojiBackground, setShowEmojiBackground] = useState<boolean>(false);
+  const [emoji, setEmoji] = useState<string>(''); // Initialize emoji state
   const [history, setHistory] = useState<{ guess: string; response: string }[]>([]);
   const [isGameWon, setIsGameWon] = useState<boolean>(false);
   const [isGameOver, setIsGameOver] = useState<boolean>(false);
@@ -124,11 +133,7 @@ export default function SinglePlayerGame() {
     ]);
 
     setResponse(data.response);
-    setEmoji(data.emoji);
-    setShowEmojiBackground(true);
-
-    // Hide the emoji background after 3 seconds
-    setTimeout(() => setShowEmojiBackground(false), 3000);
+    setEmoji(data.emoji || ''); // Update the emoji state
 
     if (data.response && data.response.includes('Congratulations!')) {
       setIsGameWon(true);
@@ -148,7 +153,6 @@ export default function SinglePlayerGame() {
     setSessionId(generateSessionId());
     setEmoji('');
     setFeedbackMessage('');
-    setShowEmojiBackground(false);
 
     fetch(`${serverUrl}/generate`, {
       method: 'POST',
@@ -165,18 +169,25 @@ export default function SinglePlayerGame() {
     });
   };
 
+  const handleKeyPress = (e: any) => {
+    if (e.nativeEvent.key === 'Enter') {
+      handleGuessSubmission();
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <AnimatedBackground />
-        <AnimatedEmojiBackground emoji={emoji} visible={showEmojiBackground} />
+        <AnimatedBackground emoji={emoji} />
+        {/* Remove the AnimatedEmojiBackground component */}
+        {/* <AnimatedEmojiBackground emoji={emoji} visible={showEmojiBackground} /> */}
         <MotiView
           from={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: 'timing', duration: 1000 }}
           style={styles.gameWrapper}
         >
-          <Text style={styles.mainHeader}>AI Challenge</Text>
+          <Text style={styles.mainHeader}>Beat the bot!</Text>
           <Zap style={styles.sparklesIcon} color="#1E2A3A" size={32} />
 
           <View style={styles.gameContainer}>
@@ -227,6 +238,8 @@ export default function SinglePlayerGame() {
                     value={userGuess}
                     onChangeText={setUserGuess}
                     editable={!isLoading}
+                    onKeyPress={handleKeyPress}
+                    onSubmitEditing={handleGuessSubmission}
                   />
                   <CustomButton
                     style={[styles.sendButton, isLoading && styles.buttonDisabled]}
@@ -256,7 +269,7 @@ export default function SinglePlayerGame() {
                     </View>
                     <View style={styles.responseBubble}>
                       <Text style={styles.messageText}>
-                        <Text style={styles.boldText}>AI Response:</Text>{' '}
+                        <Text style={styles.boldText}>Bot's Response:</Text>{' '}
                         {history[history.length - 1].response}
                       </Text>
                     </View>
@@ -323,7 +336,7 @@ export default function SinglePlayerGame() {
                       </View>
                       <View style={styles.responseBubble}>
                         <Text style={styles.messageText}>
-                          <Text style={styles.boldText}>AI Response:</Text> {item.response}
+                          <Text style={styles.boldText}>Bot's Response:</Text> {item.response}
                         </Text>
                       </View>
                     </View>

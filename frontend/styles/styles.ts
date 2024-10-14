@@ -82,8 +82,9 @@ const styles = StyleSheet.create({
     backgroundColor: primaryColor,
     padding: 15,
     borderRadius: 25,
+    margin: 5,
     alignItems: 'center',
-    width: '100%',
+    width: 250,
     maxWidth: 300,
     flexDirection: 'row',
     justifyContent: 'center',
@@ -245,12 +246,10 @@ const styles = StyleSheet.create({
   latestMessageContainer: {
     marginVertical: 10,
     width: '100%',
-    maxHeight: 200,
     borderRadius: 15,
-    borderWidth: 2,
-    borderColor: primaryColor,
+    borderWidth: 0,
     padding: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
   },
   guessBubble: {
     backgroundColor: 'rgba(0, 255, 255, 0.2)',
@@ -363,6 +362,14 @@ const styles = StyleSheet.create({
   playerName: {
     fontSize: 18,
     color: textColor,
+  },
+  // Added styles for animated emojis
+  animatedEmoji: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emojiText: {
+    fontSize: 30, // Adjust the size as needed
   },
 });
 

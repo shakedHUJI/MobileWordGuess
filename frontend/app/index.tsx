@@ -68,7 +68,7 @@ export default function MainScreen() {
                 onPress={() => router.push('/single-player')}
               >
                 <UserCircle color="#1E2A3A" size={24} style={styles.buttonIcon} />
-                <Text style={styles.buttonText}>Solo Mission</Text>
+                <Text style={styles.buttonText}>Single player</Text>
               </CustomButton>
             </View>
             <View style={styles.buttonContainer}>
@@ -77,7 +77,7 @@ export default function MainScreen() {
                 onPress={() => router.push('/multi-player-selection')}
               >
                 <Users color="#1E2A3A" size={24} style={styles.buttonIcon} />
-                <Text style={styles.buttonText}>AI Showdown</Text>
+                <Text style={styles.buttonText}>Play against friends</Text>
               </CustomButton>
             </View>
           </View>

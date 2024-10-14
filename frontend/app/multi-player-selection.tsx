@@ -91,7 +91,7 @@ export default function MultiPlayerSelection() {
         showAlert('Not connected to the game server. Please try again.');
       }
     } else {
-      showAlert('Please enter your codename!');
+      showAlert('Please enter your name!');
     }
   };
 
@@ -102,7 +102,7 @@ export default function MultiPlayerSelection() {
         params: { playerName: playerName.trim() },
       });
     } else {
-      showAlert('Please enter your codename!');
+      showAlert('Please enter your nickname!');
     }
   };
 
@@ -116,15 +116,15 @@ export default function MultiPlayerSelection() {
           transition={{ type: 'timing', duration: 1000 }}
           style={styles.gameWrapper}
         >
-          <Text style={styles.mainHeader}>AI Showdown</Text>
+          <Text style={styles.mainHeader}>Beat the bot!</Text>
           <Zap style={styles.sparklesIcon} color="#1E2A3A" size={32} />
 
           <View style={styles.gameContainer}>
-            <Text style={styles.heading}>Choose Your Path</Text>
+            <Text style={styles.heading}>Enter your nickname</Text>
 
             <TextInput
               style={styles.wizardNameInput}
-              placeholder="Enter Your Codename"
+              placeholder="Fill me up!"
               placeholderTextColor="#888"
               value={playerName}
               onChangeText={setPlayerName}
@@ -133,13 +133,13 @@ export default function MultiPlayerSelection() {
             <View style={styles.buttonContainer}>
               <CustomButton style={styles.button} onPress={createGame}>
                 <Wand2 color="#1E2A3A" size={24} style={styles.buttonIcon} />
-                <Text style={styles.buttonText}>Create AI Arena</Text>
+                <Text style={styles.buttonText}>Create new game</Text>
               </CustomButton>
             </View>
             <View style={styles.buttonContainer}>
               <CustomButton style={styles.button} onPress={joinGame}>
                 <Users color="#1E2A3A" size={24} style={styles.buttonIcon} />
-                <Text style={styles.buttonText}>Join Existing Arena</Text>
+                <Text style={styles.buttonText}>Join game</Text>
               </CustomButton>
             </View>
           </View>

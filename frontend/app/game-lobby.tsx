@@ -120,17 +120,17 @@ export default function GameLobby() {
           transition={{ type: 'timing', duration: 1000 }}
           style={styles.gameWrapper}
         >
-          <Text style={styles.mainHeader}>AI Arena</Text>
+          <Text style={styles.mainHeader}>Wait for other players</Text>
           <Zap style={styles.sparklesIcon} color="#00FFFF" size={32} />
 
           <View style={styles.gameContainer}>
             <View style={styles.gameIdContainer}>
-              <Text style={styles.gameIdLabel}>Arena Code:</Text>
+              <Text style={styles.gameIdLabel}>Enter code to join:</Text>
               <Text style={styles.gameId}>{gameId}</Text>
             </View>
 
             <View style={styles.playersListContainer}>
-              <Text style={styles.heading}>AI Challengers:</Text>
+              <Text style={styles.heading}> Challengers:</Text>
               <FlatList
                 data={players}
                 renderItem={({ item }) => (
@@ -154,7 +154,7 @@ export default function GameLobby() {
               >
                 <PlayCircle color="#1E2A3A" size={24} style={styles.buttonIcon} />
                 <Text style={styles.buttonText}>
-                  {isHost ? 'Initiate AI Battle' : 'Awaiting Arena Master'}
+                  {isHost ? 'Beat the Bot!' : 'Awaiting to start the game'}
                 </Text>
               </CustomButton>
             </View>
