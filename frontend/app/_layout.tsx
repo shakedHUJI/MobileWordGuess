@@ -2,10 +2,18 @@
 
 import React, { useEffect } from 'react';
 import { Slot } from 'expo-router';
-import { View } from 'react-native';
+import { View, Text } from 'react-native';
 import styles from '../styles/styles';
 import { WebSocketProvider } from './WebSocketProvider';
 import SoundManager from '../SoundManager'; // Adjust the path accordingly
+import ErrorBoundary from 'react-native-error-boundary';
+
+const ErrorFallback = ({ error }: { error: Error }) => (
+  <View style={styles.container}>
+    <Text>An error occurred:</Text>
+    <Text>{error.toString()}</Text>
+  </View>
+);
 
 export default function RootLayout() {
   useEffect(() => {
@@ -23,10 +31,12 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <WebSocketProvider>
-      <View style={styles.container}>
-        <Slot />
-      </View>
-    </WebSocketProvider>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <WebSocketProvider>
+        <View style={styles.container}>
+          <Slot />
+        </View>
+      </WebSocketProvider>
+    </ErrorBoundary>
   );
 }
