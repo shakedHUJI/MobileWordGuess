@@ -6,6 +6,7 @@ import styles from '../styles/styles';
 import { useWebSocket } from './WebSocketProvider';
 import { User, PlayCircle } from 'lucide-react-native';
 import { MotiView } from 'moti';
+import BackButton from '../components/BackButton';
 
 const AnimatedBackground = React.memo(() => {
   return (
@@ -114,6 +115,7 @@ export default function GameLobby() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <AnimatedBackground />
+        <BackButton shouldConfirm={true} goToIndex={false} confirmMessage="Are you sure you want to leave the lobby?" />
         <MotiView
           from={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}

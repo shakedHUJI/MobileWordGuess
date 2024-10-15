@@ -7,14 +7,13 @@ import {
   Alert,
   SafeAreaView,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import styles from '../styles/styles';
 import { useWebSocket } from './WebSocketProvider';
 import CustomButton from '../components/CustomButton';
 import { LogIn } from 'lucide-react-native';
 import { MotiView } from 'moti';
-
+import BackButton from '../components/BackButton';
 
 const AnimatedBackground = React.memo(() => {
   return (
@@ -164,6 +163,7 @@ const JoinMultiPlayerGame = () => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <AnimatedBackground />
+        <BackButton shouldConfirm={false} goToIndex={false} />
         <MotiView
           from={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}

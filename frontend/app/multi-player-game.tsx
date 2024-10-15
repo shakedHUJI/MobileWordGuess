@@ -19,6 +19,7 @@ import { useWebSocket } from './WebSocketProvider';
 import CustomButton from '../components/CustomButton';
 import { Send, History, X } from 'lucide-react-native';
 import { MotiView } from 'moti';
+import BackButton from '../components/BackButton';
 
 // Define the props type for AnimatedBackground
 interface AnimatedBackgroundProps {
@@ -238,6 +239,11 @@ export default function MultiPlayerGame() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <AnimatedBackground emoji={emoji} />
+        <BackButton 
+          shouldConfirm={true} 
+          goToIndex={true} 
+          confirmMessage="Are you sure you want to leave the game?"
+        />
         <MotiView
           from={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
