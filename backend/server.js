@@ -154,14 +154,13 @@ async function generateResponse(
   const prompt = `
     We're going to play a simple game.
     We have two words:
-    User's guess - "${userGuess}"
-    Secret word - "${secretWord}"
+    User's guess - ${userGuess}
+    Secret word - ${secretWord}
     Write the connection you find between the words in one sentence.
     Do not use the secret word directly, but you are encouraged to use the user's guess directly.
-    Don't be too obvious or specific in your answer. Don't use the secret word's emoji.
-    
+    Don't be too obvious or specific in your answer. Don't use the secret word's emoji. Don't use very related words to the secret word explicitly (aka - if the secret word is "lamp" don't use "bulb")
+    for instance - if the secret word is "bear" and the user guess is "dog" you may answer something like "while it is often fun and playfull to pet a dog, i wouldn't recommend petting my secret, unless you're feeling you wouldn't need your hand anymore!"
     Keep your tone light, breezy, and fun. You can use humor and slang in moderation.
-    Finish it off by giving the two words a 'connection score' from 1 to 10.
   `;
 
   const promptEmoji = `Respond only with the best fitting emoji for the word "${userGuess}" without any additional text.`;
