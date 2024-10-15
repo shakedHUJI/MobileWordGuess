@@ -17,7 +17,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useWebSocket } from './WebSocketProvider';
 import CustomButton from '../components/CustomButton';
-import { Zap, Send, History, X } from 'lucide-react-native';
+import { Send, History, X } from 'lucide-react-native';
 import { MotiView } from 'moti';
 
 // Define the props type for AnimatedBackground
@@ -245,8 +245,6 @@ export default function MultiPlayerGame() {
           style={styles.gameWrapper}
         >
           <Text style={styles.mainHeader}>Beat the Bot!</Text>
-          <Zap style={styles.sparklesIcon} color="#1E2A3A" size={32} />
-
           <View style={styles.gameContainer}>
             {isGameOver ? (
               isGameWon ? (

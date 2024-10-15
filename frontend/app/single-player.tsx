@@ -15,7 +15,7 @@ import {
 import styles from '../styles/styles';
 import { useRouter } from 'expo-router';
 import CustomButton from '../components/CustomButton';
-import { Zap, Send, History, X, Wand2, ArrowLeft } from 'lucide-react-native';
+import {  Send, History, X, Wand2, ArrowLeft } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import BackButton from '../components/BackButton';
@@ -188,7 +188,6 @@ export default function SinglePlayerGame() {
           style={styles.gameWrapper}
         >
           <Text style={styles.mainHeader}>Beat the bot!</Text>
-          <Zap style={styles.sparklesIcon} color="#1E2A3A" size={32} />
 
           <View style={styles.gameContainer}>
             {feedbackMessage ? (

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { UserCircle, Users, Zap } from 'lucide-react-native';
+import { UserCircle, Users } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import CustomButton from '../components/CustomButton';
 import styles from '../styles/styles';
@@ -59,7 +59,6 @@ export default function MainScreen() {
           style={styles.gameWrapper}
         >
           <Text style={styles.mainHeader}>Beat the Bot</Text>
-          <Zap style={styles.sparklesIcon} color="#1E2A3A" size={32} />
           <View style={styles.modeSelectionContainer}>
             <Text style={styles.heading}>Choose Your Challenge</Text>
             <View style={styles.buttonContainer}>

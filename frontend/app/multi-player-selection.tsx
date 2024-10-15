@@ -4,7 +4,7 @@ import styles from '../styles/styles';
 import { useRouter } from 'expo-router';
 import { useWebSocket } from './WebSocketProvider';
 import CustomButton from '../components/CustomButton';
-import { Zap, Wand2, Users } from 'lucide-react-native';
+import {  Wand2, Users } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import BackButton from '../components/BackButton';
 
@@ -119,7 +119,6 @@ export default function MultiPlayerSelection() {
           style={styles.gameWrapper}
         >
           <Text style={styles.mainHeader}>Beat the bot!</Text>
-          <Zap style={styles.sparklesIcon} color="#1E2A3A" size={32} />
 
           <View style={styles.gameContainer}>
             <Text style={styles.heading}>Enter your nickname</Text>

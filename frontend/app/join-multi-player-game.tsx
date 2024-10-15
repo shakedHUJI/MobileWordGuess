@@ -13,7 +13,6 @@ import styles from '../styles/styles';
 import { useWebSocket } from './WebSocketProvider';
 import CustomButton from '../components/CustomButton';
 import { LogIn } from 'lucide-react-native';
-import { Zap } from 'lucide-react-native';
 import { MotiView } from 'moti';
 
 
@@ -172,7 +171,6 @@ const JoinMultiPlayerGame = () => {
           style={styles.gameWrapper}
         >
           <Text style={styles.mainHeader}>Join AI Arena</Text>
-          <Zap style={styles.sparklesIcon} color="#1E2A3A" size={32} />
 
           <View style={styles.gameContainer}>
             <Text style={styles.heading}>Enter Arena Code</Text>

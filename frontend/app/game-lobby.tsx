@@ -4,7 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import CustomButton from '../components/CustomButton';
 import styles from '../styles/styles';
 import { useWebSocket } from './WebSocketProvider';
-import { Zap, User, PlayCircle } from 'lucide-react-native';
+import { User, PlayCircle } from 'lucide-react-native';
 import { MotiView } from 'moti';
 
 const AnimatedBackground = React.memo(() => {
@@ -121,7 +121,6 @@ export default function GameLobby() {
           style={styles.gameWrapper}
         >
           <Text style={styles.mainHeader}>Wait for other players</Text>
-          <Zap style={styles.sparklesIcon} color="#00FFFF" size={32} />
 
           <View style={styles.gameContainer}>
             <View style={styles.gameIdContainer}>
