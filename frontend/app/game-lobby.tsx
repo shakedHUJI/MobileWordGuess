@@ -115,14 +115,17 @@ export default function GameLobby() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <AnimatedBackground />
+        
+        
         <BackButton shouldConfirm={true} goToIndex={false} confirmMessage="Are you sure you want to leave the lobby?" />
+        
         <MotiView
           from={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: 'timing', duration: 1000 }}
           style={styles.gameWrapper}
         >
-          <Text style={styles.mainHeader}>Wait for other players</Text>
+          <Text style={styles.mainHeader}>Waiting...</Text>
 
           <View style={styles.gameContainer}>
             <View style={styles.gameIdContainer}>

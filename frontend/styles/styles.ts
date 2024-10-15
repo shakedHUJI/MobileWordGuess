@@ -46,7 +46,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(42, 60, 80, 0.8)',
     borderRadius: 20,
     padding: 20,
-    shadowColor: primaryColor,
     shadowOffset: {
       width: 0,
       height: 2,

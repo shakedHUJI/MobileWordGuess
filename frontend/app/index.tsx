@@ -59,6 +59,7 @@ export default function MainScreen() {
           style={styles.gameWrapper}
         >
           <Text style={styles.mainHeader}>Beat the Bot</Text>
+          <View style={{justifyContent: 'center', height: '80%'} }>
           <View style={styles.modeSelectionContainer}>
             <Text style={styles.heading}>Choose Your Challenge</Text>
             <View style={styles.buttonContainer}>
@@ -79,6 +80,7 @@ export default function MainScreen() {
                 <Text style={styles.buttonText}>Play against friends</Text>
               </CustomButton>
             </View>
+          </View>
           </View>
         </MotiView>
       </View>
