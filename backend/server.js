@@ -94,7 +94,9 @@ function handleSinglePlayerGuess(sessionId, userGuess, res) {
 
   console.log("Secret word for session:", sessionId, secretWord);
 
-  if (userGuess.toLowerCase() === secretWord.toLowerCase()) {
+  if (
+    secretWord.some((word) => word.toLowerCase() === userGuess.toLowerCase())
+  ) {
     return res.json({
       yourGuess: userGuess,
       response: "Congratulations! You've guessed the secret word!",
@@ -124,7 +126,9 @@ function handleMultiPlayerGuess(gameId, playerName, userGuess, ws) {
 
   const secretWord = game.secretWord;
 
-  if (userGuess.toLowerCase() === secretWord.toLowerCase()) {
+  if (
+    secretWord.some((word) => word.toLowerCase() === userGuess.toLowerCase())
+  ) {
     game.secretWord = loadRandomWord(); // Generate a new word
     game.currentTurn = (game.currentTurn + 1) % game.players.length; // Switch turn
     broadcastGameState(gameId, {
@@ -155,7 +159,7 @@ async function generateResponse(
     We're going to play a simple game.
     We have two words:
     User's guess - ${userGuess}
-    Secret word - ${secretWord}
+    Secret word - ${secretWord[0]}
     Write the connection you find between the words in one sentence.
     Do not use the secret word directly, but you are encouraged to use the user's guess directly.
     Don't be too obvious or specific in your answer. Don't use the secret word's emoji. Don't use very related words to the secret word explicitly (aka - if the secret word is "lamp" don't use "bulb")
