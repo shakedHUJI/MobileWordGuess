@@ -101,12 +101,20 @@ const SeparatedInputBoxes: React.FC<{
   }, [wordLength]);
 
   const handleInputChange = (text: string, index: number) => {
+    if (revealedCharacters[index]) return; // Prevent changing revealed characters
+
     const newGuess = userGuess.split('');
     newGuess[index] = text.toLowerCase();
     onChangeText(newGuess.join(''));
 
-    if (text && index < wordLength - 1) {
-      inputRefs.current[index + 1]?.focus();
+    if (text) {
+      let nextIndex = index + 1;
+      while (nextIndex < wordLength && revealedCharacters[nextIndex]) {
+        nextIndex++;
+      }
+      if (nextIndex < wordLength) {
+        inputRefs.current[nextIndex]?.focus();
+      }
     }
   };
 
@@ -207,8 +215,15 @@ Good luck, and may the sharpest mind win!
     setIsLoading(true);
     setGuessCount(guessCount + 1);
 
+    // Create a new guess that includes revealed characters
+    const finalGuess = wordLength
+      ? [...Array(wordLength)].map((_, index) => 
+          revealedCharacters[index] || userGuess[index] || ''
+        ).join('')
+      : userGuess.trim();
+
     const postData: any = {
-      userGuess: userGuess.trim(),
+      userGuess: finalGuess,
       mode: 'single',
       sessionId: sessionId,
     };
@@ -351,15 +366,18 @@ Good luck, and may the sharpest mind win!
 
   const renderSendButton = () => {
     if (wordLength) {
+      const filledCharacters = userGuess.length + Object.keys(revealedCharacters).length;
+      const isGuessComplete = filledCharacters === wordLength;
+
       return (
         <CustomButton
           style={[
             styles.sendButtonRevealed,
-            (isLoading || isExceedingLimit || isExceedingSpaceLimit || userGuess.length !== wordLength) && styles.disabledButton,
+            (!isGuessComplete || isLoading) && styles.disabledButton,
             { marginTop: 10 } // Add some space above the button
           ]}
           onPress={handleGuessSubmission}
-          disabled={isLoading || isExceedingLimit || isExceedingSpaceLimit || userGuess.length !== wordLength}
+          disabled={!isGuessComplete || isLoading}
         >
           <Send color="#1E2A3A" size={24} style={styles.sendButtonIcon} />
           <Text style={styles.sendButtonText}>Send</Text>
@@ -620,13 +638,12 @@ const localStyles = StyleSheet.create({
   },
   separatedInput: {
     borderWidth: 2,
-    borderColor: '#FF69B4',
+    borderColor: '#4ECDC4',
     borderRadius: 10,
     textAlign: 'center',
     margin: 3,
     marginBottom: 0,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    color: '#4A0E4E',
   },
   revealedSendButtonContainer: {
     width: '100%',
@@ -651,7 +668,8 @@ const localStyles = StyleSheet.create({
     fontWeight: 'bold',
   },
   revealedCharacter: {
-    backgroundColor: '#FFD700',
-    borderColor: '#FFA500',
+    backgroundColor: '#2A3C50',
+    borderColor: '#4ECDC4',
+    color: '#FFFFFF',
   },
 });
