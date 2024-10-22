@@ -471,6 +471,24 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: 'center',
   },
+  sendButtonRevealed: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: secondaryColor,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  sendButtonIcon: {
+    marginRight: 10,
+  },
+  sendButtonText: {
+    color: '#1E2A3A',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
 
 export default styles;

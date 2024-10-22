@@ -13,6 +13,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Dimensions,
 } from 'react-native';
 import styles from '../styles/styles';
 import { useRouter } from 'expo-router';
@@ -85,10 +86,22 @@ const SeparatedInputBoxes: React.FC<{
   isLoading: boolean;
 }> = ({ wordLength, userGuess, onChangeText, onSubmitEditing, isLoading }) => {
   const inputRefs = useRef<Array<TextInput | null>>([]);
+  const [boxSize, setBoxSize] = useState(40); // Default size
+
+  useEffect(() => {
+    const screenWidth = Dimensions.get('window').width;
+    const containerWidth = Math.min(screenWidth * 0.9, 350); // Assuming max container width of 400
+    const spacing = 5; // Spacing between boxes
+    const totalSpacing = spacing * (wordLength - 1);
+    const availableWidth = containerWidth - totalSpacing;
+    const calculatedSize = Math.floor(availableWidth / wordLength);
+    console.log('calculatedSize', calculatedSize);
+    setBoxSize(Math.min(calculatedSize, 40)); // Use the smaller of calculated or max size
+  }, [wordLength]);
 
   const handleInputChange = (text: string, index: number) => {
     const newGuess = userGuess.split('');
-    newGuess[index] = text.toUpperCase();
+    newGuess[index] = text.toLowerCase();
     onChangeText(newGuess.join(''));
 
     if (text && index < wordLength - 1) {
@@ -108,7 +121,10 @@ const SeparatedInputBoxes: React.FC<{
         <TextInput
           key={index}
           ref={(ref) => (inputRefs.current[index] = ref)}
-          style={localStyles.separatedInput}
+          style={[
+            localStyles.separatedInput,
+            { width: boxSize, height: boxSize, fontSize: boxSize * 0.6 }
+          ]}
           value={userGuess[index] || ''}
           onChangeText={(text) => handleInputChange(text, index)}
           maxLength={1}
@@ -324,6 +340,35 @@ Good luck, and may the sharpest mind win!
     setWordLength(length);
   };
 
+  const renderSendButton = () => {
+    if (wordLength) {
+      return (
+        <CustomButton
+          style={[
+            styles.sendButtonRevealed,
+            isLoading && styles.buttonDisabled,
+            { marginTop: 10 } // Add some space above the button
+          ]}
+          onPress={handleGuessSubmission}
+          disabled={isLoading || isExceedingLimit || isExceedingSpaceLimit || userGuess.length !== wordLength}
+        >
+          <Send color="#1E2A3A" size={24} style={styles.sendButtonIcon} />
+          <Text style={styles.sendButtonText}>Send</Text>
+        </CustomButton>
+      );
+    } else {
+      return (
+        <CustomButton
+          style={[styles.sendButton, isLoading && styles.buttonDisabled]}
+          onPress={handleGuessSubmission}
+          disabled={isLoading || isExceedingLimit || isExceedingSpaceLimit}
+        >
+          <Send color="#1E2A3A" size={24} />
+        </CustomButton>
+      );
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -380,8 +425,8 @@ Good luck, and may the sharpest mind win!
               )
             ) : (
               <View style={styles.gameContent}>
-                <View style={styles.inputContainer}>
-                  {wordLength ? (
+                {wordLength ? (
+                  <>
                     <SeparatedInputBoxes
                       wordLength={wordLength}
                       userGuess={userGuess}
@@ -389,7 +434,12 @@ Good luck, and may the sharpest mind win!
                       onSubmitEditing={handleGuessSubmission}
                       isLoading={isLoading}
                     />
-                  ) : (
+                    <View style={localStyles.revealedSendButtonContainer}>
+                      {renderSendButton()}
+                    </View>
+                  </>
+                ) : (
+                  <View style={styles.inputContainer}>
                     <TextInput
                       style={styles.input}
                       placeholder="Enter your guess..."
@@ -416,15 +466,9 @@ Good luck, and may the sharpest mind win!
                       onKeyPress={handleKeyPress}
                       onSubmitEditing={handleGuessSubmission}
                     />
-                  )}
-                  <CustomButton
-                    style={[styles.sendButton, isLoading && styles.buttonDisabled]}
-                    onPress={handleGuessSubmission}
-                    disabled={isLoading || isExceedingLimit || isExceedingSpaceLimit}
-                  >
-                    <Send color="#1E2A3A" size={24} />
-                  </CustomButton>
-                </View>
+                    {renderSendButton()}
+                  </View>
+                )}
                 {isExceedingLimit && (
                   <Text style={styles.errorText}>
                     Character limit reached (max 30 characters)
@@ -560,18 +604,38 @@ const localStyles = StyleSheet.create({
   separatedInputContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 8,
   },
   separatedInput: {
-    width: 40,
-    height: 50,
     borderWidth: 2,
     borderColor: '#FF69B4',
     borderRadius: 10,
     textAlign: 'center',
-    fontSize: 24,
-    marginHorizontal: 5,
+    margin: 3,
+    marginBottom: 0,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     color: '#4A0E4E',
+  },
+  revealedSendButtonContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  sendButtonRevealed: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF69B4',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  sendButtonIcon: {
+    marginRight: 10,
+  },
+  sendButtonText: {
+    color: '#1E2A3A',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
