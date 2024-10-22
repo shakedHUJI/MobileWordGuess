@@ -12,6 +12,7 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
+  StyleSheet,
 } from 'react-native';
 import styles from '../styles/styles';
 import { useRouter } from 'expo-router';
@@ -75,6 +76,53 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = React.memo(({ emoj
 // Add this import at the top of the file
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Add this new component
+const SeparatedInputBoxes: React.FC<{
+  wordLength: number;
+  userGuess: string;
+  onChangeText: (text: string) => void;
+  onSubmitEditing: () => void;
+  isLoading: boolean;
+}> = ({ wordLength, userGuess, onChangeText, onSubmitEditing, isLoading }) => {
+  const inputRefs = useRef<Array<TextInput | null>>([]);
+
+  const handleInputChange = (text: string, index: number) => {
+    const newGuess = userGuess.split('');
+    newGuess[index] = text.toUpperCase();
+    onChangeText(newGuess.join(''));
+
+    if (text && index < wordLength - 1) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyPress = (e: any, index: number) => {
+    if (e.nativeEvent.key === 'Backspace' && !userGuess[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  return (
+    <View style={localStyles.separatedInputContainer}>
+      {[...Array(wordLength)].map((_, index) => (
+        <TextInput
+          key={index}
+          ref={(ref) => (inputRefs.current[index] = ref)}
+          style={localStyles.separatedInput}
+          value={userGuess[index] || ''}
+          onChangeText={(text) => handleInputChange(text, index)}
+          maxLength={1}
+          keyboardType="default"
+          autoCapitalize="characters"
+          editable={!isLoading}
+          onKeyPress={(e) => handleKeyPress(e, index)}
+          onSubmitEditing={onSubmitEditing}
+        />
+      ))}
+    </View>
+  );
+};
+
 export default function SinglePlayerGame() {
   const router = useRouter();
   const [sessionId, setSessionId] = useState<string>(generateSessionId());
@@ -102,6 +150,7 @@ Good luck, and may the sharpest mind win!
   const [isExceedingLimit, setIsExceedingLimit] = useState<boolean>(false);
   const [isExceedingSpaceLimit, setIsExceedingSpaceLimit] = useState<boolean>(false);
   const [isHintBoxVisible, setIsHintBoxVisible] = useState<boolean>(false);
+  const [wordLength, setWordLength] = useState<number | null>(null);
 
   const confettiRef = useRef<any>(null);
 
@@ -194,6 +243,7 @@ Good luck, and may the sharpest mind win!
     setSessionId(generateSessionId());
     setEmoji('');
     setFeedbackMessage('');
+    setWordLength(null); // Reset wordLength to null
 
     fetch(`${serverUrl}/generate`, {
       method: 'POST',
@@ -234,6 +284,44 @@ Good luck, and may the sharpest mind win!
     setHistory([]);
     setEmoji('');
     setFeedbackMessage('');
+    setWordLength(null); // Reset wordLength to null
+  };
+
+  const handleRevealWordLength = async () => {
+    console.log('Revealing word length');
+    try {
+      const postData = {
+        sessionId: sessionId,
+        mode: 'single',
+      };
+
+      const response = await fetch(`${serverUrl}/reveal-word-length`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(postData).toString(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to reveal word length');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setWordLength(data.wordLength);
+        Alert.alert('Word Length', `The secret word is ${data.wordLength} characters long.`);
+      } else {
+        throw new Error(data.message || 'Failed to reveal word length');
+      }
+    } catch (error) {
+      console.error('Error revealing word length:', error);
+      Alert.alert('Error', 'Failed to reveal the word length. Please try again.');
+    }
+  };
+
+  const handleWordLengthRevealed = (length: number) => {
+    setWordLength(length);
   };
 
   return (
@@ -293,33 +381,42 @@ Good luck, and may the sharpest mind win!
             ) : (
               <View style={styles.gameContent}>
                 <View style={styles.inputContainer}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter your guess..."
-                    placeholderTextColor="#888"
-                    value={userGuess}
-                    onChangeText={(text) => {
-                      let newText = text;
-                      const spaceCount = text.split(' ').length - 1;
-                      
-                      if (spaceCount > 1) {
-                        // If there's more than one space, remove extra spaces
-                        newText = text.replace(/\s+/g, ' ').trim();
-                        setIsExceedingSpaceLimit(true);
-                      } else {
-                        setIsExceedingSpaceLimit(false);
-                      }
+                  {wordLength ? (
+                    <SeparatedInputBoxes
+                      wordLength={wordLength}
+                      userGuess={userGuess}
+                      onChangeText={setUserGuess}
+                      onSubmitEditing={handleGuessSubmission}
+                      isLoading={isLoading}
+                    />
+                  ) : (
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your guess..."
+                      placeholderTextColor="#888"
+                      value={userGuess}
+                      onChangeText={(text) => {
+                        let newText = text;
+                        const spaceCount = text.split(' ').length - 1;
+                        
+                        if (spaceCount > 1) {
+                          newText = text.replace(/\s+/g, ' ').trim();
+                          setIsExceedingSpaceLimit(true);
+                        } else {
+                          setIsExceedingSpaceLimit(false);
+                        }
 
-                      if (newText.length <= 30) {
-                        setUserGuess(newText);
-                      }
-                      setIsExceedingLimit(newText.length >= 30);
-                    }}
-                    maxLength={30}
-                    editable={!isLoading}
-                    onKeyPress={handleKeyPress}
-                    onSubmitEditing={handleGuessSubmission}
-                  />
+                        if (newText.length <= 30) {
+                          setUserGuess(newText);
+                        }
+                        setIsExceedingLimit(newText.length >= 30);
+                      }}
+                      maxLength={30}
+                      editable={!isLoading}
+                      onKeyPress={handleKeyPress}
+                      onSubmitEditing={handleGuessSubmission}
+                    />
+                  )}
                   <CustomButton
                     style={[styles.sendButton, isLoading && styles.buttonDisabled]}
                     onPress={handleGuessSubmission}
@@ -451,9 +548,30 @@ Good luck, and may the sharpest mind win!
           onClose={() => setIsHintBoxVisible(false)}
           sessionId={sessionId}
           onWordChanged={handleWordChanged}
-          serverUrl={serverUrl} // Add this prop
+          serverUrl={serverUrl}
+          onWordLengthRevealed={handleWordLengthRevealed} // Add this prop
         />
       </View>
     </SafeAreaView>
   );
 }
+
+const localStyles = StyleSheet.create({
+  separatedInputContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  separatedInput: {
+    width: 40,
+    height: 50,
+    borderWidth: 2,
+    borderColor: '#FF69B4',
+    borderRadius: 10,
+    textAlign: 'center',
+    fontSize: 24,
+    marginHorizontal: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    color: '#4A0E4E',
+  },
+});
