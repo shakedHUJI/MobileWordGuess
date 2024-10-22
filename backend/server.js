@@ -52,13 +52,29 @@ let clientInfoMap = new Map(); // Map to store client information
 
 // Function to load and select a random word from words.json
 function loadRandomWord() {
-  const filePath = path.join(__dirname, "words.json");
-  const data = fs.readFileSync(filePath, "utf8");
-  const words = JSON.parse(data);
-  const nouns = words.nouns;
+  try {
+    const filePath = path.join(__dirname, "words.json");
+    console.log("Attempting to read words from:", filePath);
+    
+    const data = fs.readFileSync(filePath, "utf8");
+    console.log("File read successfully");
+    
+    const words = JSON.parse(data);
+    console.log("JSON parsed successfully");
+    
+    const nouns = words.nouns;
+    console.log("Number of words available:", nouns.length);
 
-  const randomIndex = Math.floor(Math.random() * nouns.length);
-  return nouns[randomIndex];
+    const randomIndex = Math.floor(Math.random() * nouns.length);
+    const selectedWord = nouns[randomIndex];
+    console.log("Random word selected:", selectedWord);
+
+    return selectedWord;
+  } catch (error) {
+    console.error("Error in loadRandomWord function:", error);
+    console.error("Error stack:", error.stack);
+    throw error; // Re-throw the error to be caught in the /replace-word route
+  }
 }
 
 // Route to handle form submission for single-player and multiplayer modes
@@ -249,22 +265,36 @@ function logGames() {
   });
 }
 
-// Add this new route
+// Add this new route with expanded logging
 app.post("/replace-word", (req, res) => {
+  console.log("Received request to replace word");
+  console.log("Request body:", req.body);
+  
   const { sessionId } = req.body;
 
+  console.log("Session ID received:", sessionId);
+  console.log("All current sessions:", Object.keys(sessions));
+
   if (!sessionId || !sessions[sessionId]) {
+    console.log("Invalid session ID. Sessions available:", Object.keys(sessions));
     return res.status(400).json({ success: false, message: "Invalid session ID" });
   }
 
   try {
+    console.log("Current secret word for session:", sessions[sessionId].secretWord);
     const newWord = loadRandomWord();
+    console.log("New word generated:", newWord);
+    
     sessions[sessionId].secretWord = newWord;
-    console.log(`New secret word for session ${sessionId}: ${newWord}`);
+    console.log(`New secret word set for session ${sessionId}: ${newWord}`);
+    
     res.json({ success: true, message: "Word replaced successfully" });
+    console.log("Response sent: Word replaced successfully");
   } catch (error) {
     console.error("Error replacing word:", error);
-    res.status(500).json({ success: false, message: "Failed to replace word" });
+    console.error("Error stack:", error.stack);
+    res.status(500).json({ success: false, message: "Failed to replace word", error: error.message });
+    console.log("Response sent: Failed to replace word");
   }
 });
 
