@@ -1,6 +1,6 @@
 // single-player.tsx
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Text,
   View,
@@ -83,6 +83,8 @@ export default function SinglePlayerGame() {
   const [feedbackMessage, setFeedbackMessage] = useState<string>('');
   const [isSideMenuVisible, setIsSideMenuVisible] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isExceedingLimit, setIsExceedingLimit] = useState<boolean>(false);
+  const [isExceedingSpaceLimit, setIsExceedingSpaceLimit] = useState<boolean>(false);
 
   const confettiRef = useRef<any>(null);
 
@@ -91,6 +93,11 @@ export default function SinglePlayerGame() {
   function generateSessionId() {
     return '_' + Math.random().toString(36).substr(2, 9);
   }
+
+  useEffect(() => {
+    setIsExceedingLimit(userGuess.length >= 30);
+    setIsExceedingSpaceLimit(userGuess.split(' ').length > 2);
+  }, [userGuess]);
 
   const handleGuessSubmission = async () => {
     if (!userGuess.trim()) return;
@@ -235,7 +242,24 @@ export default function SinglePlayerGame() {
                     placeholder="Enter your guess..."
                     placeholderTextColor="#888"
                     value={userGuess}
-                    onChangeText={setUserGuess}
+                    onChangeText={(text) => {
+                      let newText = text;
+                      const spaceCount = text.split(' ').length - 1;
+                      
+                      if (spaceCount > 1) {
+                        // If there's more than one space, remove extra spaces
+                        newText = text.replace(/\s+/g, ' ').trim();
+                        setIsExceedingSpaceLimit(true);
+                      } else {
+                        setIsExceedingSpaceLimit(false);
+                      }
+
+                      if (newText.length <= 30) {
+                        setUserGuess(newText);
+                      }
+                      setIsExceedingLimit(newText.length >= 30);
+                    }}
+                    maxLength={30}
                     editable={!isLoading}
                     onKeyPress={handleKeyPress}
                     onSubmitEditing={handleGuessSubmission}
@@ -243,11 +267,21 @@ export default function SinglePlayerGame() {
                   <CustomButton
                     style={[styles.sendButton, isLoading && styles.buttonDisabled]}
                     onPress={handleGuessSubmission}
-                    disabled={isLoading}
+                    disabled={isLoading || isExceedingLimit || isExceedingSpaceLimit}
                   >
                     <Send color="#1E2A3A" size={24} />
                   </CustomButton>
                 </View>
+                {isExceedingLimit && (
+                  <Text style={styles.errorText}>
+                    Character limit reached (max 30 characters)
+                  </Text>
+                )}
+                {isExceedingSpaceLimit && (
+                  <Text style={styles.errorText}>
+                    Only one space allowed
+                  </Text>
+                )}
                 <Text style={styles.guessCounter}>Attempts: {guessCount}</Text>
                 {isLoading ? (
                   <View style={styles.loadingContainer}>

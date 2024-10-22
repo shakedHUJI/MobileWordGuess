@@ -377,6 +377,11 @@ const styles = StyleSheet.create({
     zIndex: 10,
     padding: 10,
   },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 5,
+  },
 });
 
 export default styles;
