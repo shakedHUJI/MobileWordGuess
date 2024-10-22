@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Modal, TouchableOpacity, Alert, Platform } from 'react-native';
 import { X, Eye, Ruler, RefreshCw } from 'lucide-react-native';
 import styles from '../styles/styles';
@@ -13,6 +13,8 @@ interface HintBoxProps {
 }
 
 const HintBox: React.FC<HintBoxProps> = ({ isVisible, onClose, sessionId, onWordChanged, serverUrl }) => {
+  const [wordLength, setWordLength] = useState<number | null>(null);
+
   const handleReplaceWord = () => {
     const confirmMessage = "Are you sure you want to switch the secret word?";
 
@@ -67,6 +69,38 @@ const HintBox: React.FC<HintBoxProps> = ({ isVisible, onClose, sessionId, onWord
     }
   };
 
+  const handleRevealWordLength = async () => {
+    try {
+      const postData = {
+        sessionId: sessionId,
+        mode: 'single',
+      };
+
+      const response = await fetch(`${serverUrl}/reveal-word-length`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(postData).toString(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to reveal word length');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setWordLength(data.wordLength);
+        Alert.alert('Word Length', `The secret word is ${data.wordLength} characters long.`);
+      } else {
+        throw new Error(data.message || 'Failed to reveal word length');
+      }
+    } catch (error) {
+      console.error('Error revealing word length:', error);
+      Alert.alert('Error', 'Failed to reveal the word length. Please try again.');
+    }
+  };
+
   return (
     <Modal
       animationType="fade"
@@ -91,7 +125,7 @@ const HintBox: React.FC<HintBoxProps> = ({ isVisible, onClose, sessionId, onWord
                 <Text style={styles.hintButtonText}>Reveal Character</Text>
               </View>
             </CustomButton>
-            <CustomButton style={styles.hintButton} onPress={() => {}}>
+            <CustomButton style={styles.hintButton} onPress={handleRevealWordLength}>
               <View style={styles.hintButtonContent}>
                 <Ruler color="#1E2A3A" size={24} style={styles.hintButtonIcon} />
                 <Text style={styles.hintButtonText}>Reveal Word Length</Text>
@@ -104,6 +138,9 @@ const HintBox: React.FC<HintBoxProps> = ({ isVisible, onClose, sessionId, onWord
               </View>
             </CustomButton>
           </View>
+          {wordLength !== null && (
+            <Text style={styles.wordLengthText}>Word Length: {wordLength}</Text>
+          )}
         </View>
       </View>
     </Modal>

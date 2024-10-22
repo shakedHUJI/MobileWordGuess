@@ -305,6 +305,42 @@ app.post("/replace-word", (req, res) => {
   }
 });
 
+// Add this new route for revealing word length
+app.post("/reveal-word-length", (req, res) => {
+  console.log("Received request to reveal word length");
+  console.log("Request body:", req.body);
+  
+  const { sessionId, mode } = req.body;
+
+  console.log("Session ID received:", sessionId);
+  console.log("Mode received:", mode);
+  console.log("All current sessions:", Object.keys(sessions));
+
+  if (mode !== 'single') {
+    console.log("Invalid mode. Expected 'single', received:", mode);
+    return res.status(400).json({ success: false, message: "Invalid mode" });
+  }
+
+  if (!sessionId || !sessions[sessionId]) {
+    console.log("Invalid session ID. Sessions available:", Object.keys(sessions));
+    return res.status(400).json({ success: false, message: "Invalid session ID" });
+  }
+
+  try {
+    const secretWord = sessions[sessionId].secretWord;
+    const wordLength = secretWord.length;
+    console.log(`Word length for session ${sessionId}: ${wordLength}`);
+    
+    res.json({ success: true, wordLength: wordLength });
+    console.log("Response sent: Word length revealed successfully");
+  } catch (error) {
+    console.error("Error revealing word length:", error);
+    console.error("Error stack:", error.stack);
+    res.status(500).json({ success: false, message: "Failed to reveal word length", error: error.message });
+    console.log("Response sent: Failed to reveal word length");
+  }
+});
+
 // WebSocket connection handler
 wss.on("connection", (ws) => {
   console.log("New WebSocket connection established");
