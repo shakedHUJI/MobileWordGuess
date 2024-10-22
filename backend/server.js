@@ -44,6 +44,7 @@ app.use(
 );
 
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json()); // Add this line to parse JSON requests
 app.use(express.static(path.join(__dirname, "public")));
 
 let games = {};
@@ -270,10 +271,16 @@ app.post("/replace-word", (req, res) => {
   console.log("Received request to replace word");
   console.log("Request body:", req.body);
   
-  const { sessionId } = req.body;
+  const { sessionId, mode } = req.body;
 
   console.log("Session ID received:", sessionId);
+  console.log("Mode received:", mode);
   console.log("All current sessions:", Object.keys(sessions));
+
+  if (mode !== 'single') {
+    console.log("Invalid mode. Expected 'single', received:", mode);
+    return res.status(400).json({ success: false, message: "Invalid mode" });
+  }
 
   if (!sessionId || !sessions[sessionId]) {
     console.log("Invalid session ID. Sessions available:", Object.keys(sessions));

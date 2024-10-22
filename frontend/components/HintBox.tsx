@@ -9,17 +9,24 @@ interface HintBoxProps {
   onClose: () => void;
   sessionId: string;
   onWordChanged: () => void;
+  serverUrl: string;
 }
 
-const HintBox: React.FC<HintBoxProps> = ({ isVisible, onClose, sessionId, onWordChanged }) => {
+const HintBox: React.FC<HintBoxProps> = ({ isVisible, onClose, sessionId, onWordChanged, serverUrl }) => {
   const handleReplaceWord = async () => {
     try {
-      const response = await fetch('https://mobilewordguess.onrender.com/replace-word', {
+      const postData = {
+        sessionId: sessionId,
+        mode: 'single',
+        replaceWord: 'true',
+      };
+
+      const response = await fetch(`${serverUrl}/replace-word`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: JSON.stringify({ sessionId }),
+        body: new URLSearchParams(postData).toString(),
       });
 
       if (!response.ok) {

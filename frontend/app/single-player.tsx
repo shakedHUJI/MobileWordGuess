@@ -451,6 +451,7 @@ Good luck, and may the sharpest mind win!
           onClose={() => setIsHintBoxVisible(false)}
           sessionId={sessionId}
           onWordChanged={handleWordChanged}
+          serverUrl={serverUrl} // Add this prop
         />
       </View>
     </SafeAreaView>
