@@ -320,7 +320,7 @@ Good luck, and may the sharpest mind win!
     }
   };
 
-  const handleWordLengthRevealed = (length: number) => {
+  const handleWordLengthRevealed = (length: number | null) => {
     setWordLength(length);
   };
 
@@ -549,7 +549,7 @@ Good luck, and may the sharpest mind win!
           sessionId={sessionId}
           onWordChanged={handleWordChanged}
           serverUrl={serverUrl}
-          onWordLengthRevealed={handleWordLengthRevealed} // Add this prop
+          onWordLengthRevealed={handleWordLengthRevealed}
         />
       </View>
     </SafeAreaView>

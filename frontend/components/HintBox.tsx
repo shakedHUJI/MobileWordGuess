@@ -10,7 +10,7 @@ interface HintBoxProps {
   sessionId: string;
   onWordChanged: () => void;
   serverUrl: string;
-  onWordLengthRevealed: (length: number) => void;
+  onWordLengthRevealed: (length: number | null) => void;
 }
 
 const HintBox: React.FC<HintBoxProps> = ({ isVisible, onClose, sessionId, onWordChanged, serverUrl, onWordLengthRevealed }) => {
@@ -61,7 +61,7 @@ const HintBox: React.FC<HintBoxProps> = ({ isVisible, onClose, sessionId, onWord
       const data = await response.json();
       if (data.success) {
         onWordChanged();
-        onWordLengthRevealed(null); // Reset word length to null
+        onWordLengthRevealed(null); // This is now correct
         Alert.alert('Success', 'The word has been replaced. Good luck!');
       } else {
         throw new Error(data.message || 'Failed to replace word');
