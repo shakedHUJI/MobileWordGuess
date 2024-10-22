@@ -19,9 +19,8 @@ import {  Send, History, X, Wand2, ArrowLeft } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import BackButton from '../components/BackButton';
+import HintButton from '../components/HintButton';
 
-// Remove the import of AnimatedEmojiBackground
-// import AnimatedEmojiBackground from '../components/AnimatedEmojiBackground';
 
 // Define the props type for AnimatedBackground
 interface AnimatedBackgroundProps {
@@ -183,6 +182,11 @@ export default function SinglePlayerGame() {
     }
   };
 
+  const handleHintPress = () => {
+    // Implement hint functionality here
+    Alert.alert('Hint', 'Hint functionality coming soon!');
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -323,6 +327,7 @@ export default function SinglePlayerGame() {
                   {isSideMenuVisible ? 'Hide Guess History' : 'Show Guess History'}
                 </Text>
               </CustomButton>
+              <HintButton onPress={handleHintPress}/>
             </View>
           )}
 

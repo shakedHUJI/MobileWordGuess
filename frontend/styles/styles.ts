@@ -199,9 +199,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   historyButtonContainer: {
-    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 10,
+    paddingHorizontal: 10,
+    
   },
   historyButton: {
     backgroundColor: secondaryColor,
@@ -217,6 +220,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 10,
   },
+
   loadingContainer: {
     alignItems: 'center',
     justifyContent: 'center',
