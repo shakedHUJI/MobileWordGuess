@@ -84,7 +84,8 @@ const SeparatedInputBoxes: React.FC<{
   onChangeText: (text: string) => void;
   onSubmitEditing: () => void;
   isLoading: boolean;
-}> = ({ wordLength, userGuess, onChangeText, onSubmitEditing, isLoading }) => {
+  revealedCharacters: { [key: number]: string };
+}> = ({ wordLength, userGuess, onChangeText, onSubmitEditing, isLoading, revealedCharacters }) => {
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const [boxSize, setBoxSize] = useState(40); // Default size
 
@@ -123,14 +124,15 @@ const SeparatedInputBoxes: React.FC<{
           ref={(ref) => (inputRefs.current[index] = ref)}
           style={[
             localStyles.separatedInput,
-            { width: boxSize, height: boxSize, fontSize: boxSize * 0.6 }
+            { width: boxSize, height: boxSize, fontSize: boxSize * 0.6 },
+            revealedCharacters[index] ? localStyles.revealedCharacter : {}
           ]}
-          value={userGuess[index] || ''}
+          value={revealedCharacters[index] || userGuess[index] || ''}
           onChangeText={(text) => handleInputChange(text, index)}
           maxLength={1}
           keyboardType="default"
           autoCapitalize="characters"
-          editable={!isLoading}
+          editable={!isLoading && !revealedCharacters[index]}
           onKeyPress={(e) => handleKeyPress(e, index)}
           onSubmitEditing={onSubmitEditing}
         />
@@ -167,6 +169,8 @@ Good luck, and may the sharpest mind win!
   const [isExceedingSpaceLimit, setIsExceedingSpaceLimit] = useState<boolean>(false);
   const [isHintBoxVisible, setIsHintBoxVisible] = useState<boolean>(false);
   const [wordLength, setWordLength] = useState<number | null>(null);
+  const [isWordLengthRevealed, setIsWordLengthRevealed] = useState<boolean>(false);
+  const [revealedCharacters, setRevealedCharacters] = useState<{ [key: number]: string }>({});
 
   const confettiRef = useRef<any>(null);
 
@@ -338,6 +342,11 @@ Good luck, and may the sharpest mind win!
 
   const handleWordLengthRevealed = (length: number | null) => {
     setWordLength(length);
+    setIsWordLengthRevealed(true);
+  };
+
+  const handleCharacterRevealed = (index: number, character: string) => {
+    setRevealedCharacters(prev => ({ ...prev, [index]: character }));
   };
 
   const renderSendButton = () => {
@@ -346,7 +355,7 @@ Good luck, and may the sharpest mind win!
         <CustomButton
           style={[
             styles.sendButtonRevealed,
-            isLoading && styles.buttonDisabled,
+            (isLoading || isExceedingLimit || isExceedingSpaceLimit || userGuess.length !== wordLength) && styles.disabledButton,
             { marginTop: 10 } // Add some space above the button
           ]}
           onPress={handleGuessSubmission}
@@ -359,7 +368,7 @@ Good luck, and may the sharpest mind win!
     } else {
       return (
         <CustomButton
-          style={[styles.sendButton, isLoading && styles.buttonDisabled]}
+          style={[styles.sendButton, (isLoading || isExceedingLimit || isExceedingSpaceLimit) && styles.disabledButton]}
           onPress={handleGuessSubmission}
           disabled={isLoading || isExceedingLimit || isExceedingSpaceLimit}
         >
@@ -433,6 +442,7 @@ Good luck, and may the sharpest mind win!
                       onChangeText={setUserGuess}
                       onSubmitEditing={handleGuessSubmission}
                       isLoading={isLoading}
+                      revealedCharacters={revealedCharacters}
                     />
                     <View style={localStyles.revealedSendButtonContainer}>
                       {renderSendButton()}
@@ -594,6 +604,8 @@ Good luck, and may the sharpest mind win!
           onWordChanged={handleWordChanged}
           serverUrl={serverUrl}
           onWordLengthRevealed={handleWordLengthRevealed}
+          isWordLengthRevealed={isWordLengthRevealed}
+          onCharacterRevealed={handleCharacterRevealed}
         />
       </View>
     </SafeAreaView>
@@ -637,5 +649,9 @@ const localStyles = StyleSheet.create({
     color: '#1E2A3A',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  revealedCharacter: {
+    backgroundColor: '#FFD700',
+    borderColor: '#FFA500',
   },
 });

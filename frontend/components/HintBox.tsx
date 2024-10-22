@@ -11,9 +11,20 @@ interface HintBoxProps {
   onWordChanged: () => void;
   serverUrl: string;
   onWordLengthRevealed: (length: number | null) => void;
+  isWordLengthRevealed: boolean;
+  onCharacterRevealed: (index: number, character: string) => void;
 }
 
-const HintBox: React.FC<HintBoxProps> = ({ isVisible, onClose, sessionId, onWordChanged, serverUrl, onWordLengthRevealed }) => {
+const HintBox: React.FC<HintBoxProps> = ({
+  isVisible,
+  onClose,
+  sessionId,
+  onWordChanged,
+  serverUrl,
+  onWordLengthRevealed,
+  isWordLengthRevealed,
+  onCharacterRevealed,
+}) => {
   const [wordLength, setWordLength] = useState<number | null>(null);
 
   const handleReplaceWord = () => {
@@ -106,6 +117,39 @@ const HintBox: React.FC<HintBoxProps> = ({ isVisible, onClose, sessionId, onWord
     }
   };
 
+  const handleRevealCharacter = async () => {
+    console.log('Revealing character');
+    try {
+      const postData = {
+        sessionId: sessionId,
+        mode: 'single',
+      };
+
+      const response = await fetch(`${serverUrl}/reveal-character`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(postData).toString(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to reveal character');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        onCharacterRevealed(data.index, data.character);
+        Alert.alert('Character Revealed', `The character at position ${data.index + 1} is "${data.character}".`);
+      } else {
+        throw new Error(data.message || 'Failed to reveal character');
+      }
+    } catch (error) {
+      console.error('Error revealing character:', error);
+      Alert.alert('Error', 'Failed to reveal the character. Please try again.');
+    }
+  };
+
   return (
     <Modal
       animationType="fade"
@@ -124,13 +168,21 @@ const HintBox: React.FC<HintBoxProps> = ({ isVisible, onClose, sessionId, onWord
             <Text style={styles.popupTitle}>Hint Options</Text>
           </View>
           <View style={styles.hintButtonContainer}>
-            <CustomButton style={styles.hintButton} onPress={() => {}}>
+            <CustomButton
+              style={[styles.hintButton, !isWordLengthRevealed && styles.disabledButton]}
+              onPress={handleRevealCharacter}
+              disabled={!isWordLengthRevealed}
+            >
               <View style={styles.hintButtonContent}>
                 <Eye color="#1E2A3A" size={24} style={styles.hintButtonIcon} />
                 <Text style={styles.hintButtonText}>Reveal Character</Text>
               </View>
             </CustomButton>
-            <CustomButton style={styles.hintButton} onPress={handleRevealWordLength}>
+            <CustomButton
+              style={[styles.hintButton, isWordLengthRevealed && styles.disabledButton]}
+              onPress={handleRevealWordLength}
+              disabled={isWordLengthRevealed}
+            >
               <View style={styles.hintButtonContent}>
                 <Ruler color="#1E2A3A" size={24} style={styles.hintButtonIcon} />
                 <Text style={styles.hintButtonText}>Reveal Word Length</Text>

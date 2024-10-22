@@ -489,6 +489,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  // Add this to your existing styles
+  disabledButton: {
+    opacity: 0.5,
+    backgroundColor: '#555', // Add this line to change the background color when disabled
+  },
 });
 
 export default styles;

@@ -87,6 +87,7 @@ app.post("/generate", async (req, res) => {
     if (generateNewWord) {
       sessions[sessionId] = {
         secretWord: loadRandomWord(),
+        revealedCharacters: [], // Initialize revealedCharacters
       };
       res.json({ message: "New word generated." });
     } else {
@@ -363,6 +364,73 @@ app.post("/reveal-word-length", (req, res) => {
         error: error.message,
       });
     console.log("Response sent: Failed to reveal word length");
+  }
+});
+
+// Add this new route for revealing a character
+app.post('/reveal-character', (req, res) => {
+  console.log('Received request to reveal character');
+  console.log('Request body:', req.body);
+
+  const { sessionId, mode } = req.body;
+
+  console.log('Session ID received:', sessionId);
+  console.log('Mode received:', mode);
+  console.log('All current sessions:', Object.keys(sessions));
+
+  if (mode !== 'single') {
+    console.log('Invalid mode. Expected "single", received:', mode);
+    return res.status(400).json({ success: false, message: 'Invalid mode' });
+  }
+
+  if (!sessionId || !sessions[sessionId]) {
+    console.log('Invalid session ID. Sessions available:', Object.keys(sessions));
+    return res.status(400).json({ success: false, message: 'Invalid session ID' });
+  }
+
+  try {
+    const session = sessions[sessionId];
+    const secretWord = session.secretWord[0]; // Assuming secretWord is an array with one string
+    
+    // If revealedCharacters doesn't exist, initialize it
+    if (!session.revealedCharacters) {
+      session.revealedCharacters = [];
+    }
+
+    // Get indices of unrevealed characters
+    const unrevealedIndices = secretWord.split('').reduce((acc, char, index) => {
+      if (!session.revealedCharacters.includes(index)) {
+        acc.push(index);
+      }
+      return acc;
+    }, []);
+
+    if (unrevealedIndices.length === 0) {
+      return res.status(400).json({ success: false, message: 'All characters have been revealed' });
+    }
+
+    // Randomly select an unrevealed character
+    const randomIndex = unrevealedIndices[Math.floor(Math.random() * unrevealedIndices.length)];
+    const revealedCharacter = secretWord[randomIndex];
+
+    // Update the session
+    session.revealedCharacters.push(randomIndex);
+
+    console.log(`Revealed character "${revealedCharacter}" at index ${randomIndex} for session ${sessionId}`);
+
+    res.json({
+      success: true,
+      index: randomIndex,
+      character: revealedCharacter,
+    });
+  } catch (error) {
+    console.error('Error revealing character:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reveal character',
+      error: error.message,
+    });
   }
 });
 
