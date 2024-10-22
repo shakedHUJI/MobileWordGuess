@@ -178,8 +178,9 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     backgroundColor: secondaryColor,
-    padding: 10,
+    padding: 6,
     borderRadius: 20,
+
   },
   boldText: {
     fontWeight: 'bold',
@@ -380,6 +381,50 @@ const styles = StyleSheet.create({
     left: 10,
     zIndex: 10,
     padding: 10,
+  },
+  popupContainer: {
+    width: '90%',
+    maxWidth: 400,
+    backgroundColor: backgroundColor,
+    borderRadius: 20,
+    padding: 20,
+    maxHeight: '80%',
+    borderWidth: 1,
+    borderColor: primaryColor,
+    elevation: 5,
+  },
+  popupHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  closeButtonContainer: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  popupTitle: {
+    fontSize: 24,
+    color: primaryColor,
+    fontWeight: 'bold',
+  },
+  popupContent: {
+    maxHeight: '80%',
+  },
+  popupText: {
+    fontSize: 16,
+    color: textColor,
+    lineHeight: 24,
+  },
+  instructionsButton: {
+    position: 'absolute',
+    top: 30,
+    right: 10,
+    zIndex: 10,
+    padding: 10,
+    backgroundColor: secondaryColor,
+    borderRadius: 20,
   },
   errorText: {
     color: 'red',
