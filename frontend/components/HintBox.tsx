@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, Alert, Platform } from 'react-native';
 import { X, Eye, Ruler, RefreshCw } from 'lucide-react-native';
 import styles from '../styles/styles';
 import CustomButton from './CustomButton';
@@ -13,7 +13,28 @@ interface HintBoxProps {
 }
 
 const HintBox: React.FC<HintBoxProps> = ({ isVisible, onClose, sessionId, onWordChanged, serverUrl }) => {
-  const handleReplaceWord = async () => {
+  const handleReplaceWord = () => {
+    const confirmMessage = "Are you sure you want to switch the secret word?";
+
+    if (Platform.OS === 'web') {
+      const shouldReplace = confirm(confirmMessage);
+      if (shouldReplace) {
+        replaceWord();
+      }
+    } else {
+      Alert.alert(
+        "Confirm",
+        confirmMessage,
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "OK", onPress: () => replaceWord() }
+        ],
+        { cancelable: false }
+      );
+    }
+  };
+
+  const replaceWord = async () => {
     try {
       const postData = {
         sessionId: sessionId,
