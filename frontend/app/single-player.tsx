@@ -1,6 +1,6 @@
 // single-player.tsx
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Text,
   View,
@@ -11,14 +11,16 @@ import {
   ActivityIndicator,
   SafeAreaView,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import styles from '../styles/styles';
 import { useRouter } from 'expo-router';
 import CustomButton from '../components/CustomButton';
-import {  Send, History, X, Wand2, ArrowLeft } from 'lucide-react-native';
+import {  Send, History, X, Wand2, ArrowLeft, Info } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import BackButton from '../components/BackButton';
+import Popup from '../components/Popup';
 
 // Remove the import of AnimatedEmojiBackground
 // import AnimatedEmojiBackground from '../components/AnimatedEmojiBackground';
@@ -70,6 +72,9 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = React.memo(({ emoj
   );
 });
 
+// Add this import at the top of the file
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 export default function SinglePlayerGame() {
   const router = useRouter();
   const [sessionId, setSessionId] = useState<string>(generateSessionId());
@@ -83,6 +88,17 @@ export default function SinglePlayerGame() {
   const [feedbackMessage, setFeedbackMessage] = useState<string>('');
   const [isSideMenuVisible, setIsSideMenuVisible] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [popupVisible, setPopupVisible] = useState<boolean>(false);
+  const gameInstructions = `🤖 The Bot has a secret word up its sleeve.
+
+🎯 Your mission: Guess the word in as few attempts as possible.
+
+💡 After each guess, the Bot will drop a clue connecting your guess to the secret word.
+
+🔎 Keep hunting for hints until you crack the code!
+
+Good luck, and may the sharpest mind win!
+`;
 
   const confettiRef = useRef<any>(null);
 
@@ -91,6 +107,22 @@ export default function SinglePlayerGame() {
   function generateSessionId() {
     return '_' + Math.random().toString(36).substr(2, 9);
   }
+
+  useEffect(() => {
+    const checkFirstVisit = async () => {
+      try {
+        const hasVisited = await AsyncStorage.getItem('hasVisitedSinglePlayer');
+        if (hasVisited === null) {
+          setPopupVisible(true);
+          await AsyncStorage.setItem('hasVisitedSinglePlayer', 'true');
+        }
+      } catch (error) {
+        console.error('Error checking first visit:', error);
+      }
+    };
+
+    checkFirstVisit();
+  }, []);
 
   const handleGuessSubmission = async () => {
     if (!userGuess.trim()) return;
@@ -176,11 +208,18 @@ export default function SinglePlayerGame() {
     }
   };
 
+  const toggleInstructions = () => {
+    setPopupVisible(!popupVisible);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <AnimatedBackground emoji={emoji} />
         <BackButton shouldConfirm={true} goToIndex={true} />
+        <TouchableOpacity style={styles.instructionsButton} onPress={toggleInstructions}>
+          <Info color="#1E2A3A" size={24} />
+        </TouchableOpacity>
         <MotiView
           from={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -347,6 +386,13 @@ export default function SinglePlayerGame() {
             </View>
           </View>
         </Modal>
+
+        <Popup
+          isVisible={popupVisible}
+          onClose={toggleInstructions}
+          title="Welcome to Beat the Bot!"
+          content={gameInstructions}
+        />
       </View>
     </SafeAreaView>
   );

@@ -11,15 +11,18 @@ import {
   ActivityIndicator,
   SafeAreaView,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import styles from '../styles/styles';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useWebSocket } from './WebSocketProvider';
 import CustomButton from '../components/CustomButton';
-import { Send, History, X } from 'lucide-react-native';
+import { Send, History, X, Info } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import BackButton from '../components/BackButton';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Popup from '../components/Popup';
 
 // Define the props type for AnimatedBackground
 interface AnimatedBackgroundProps {
@@ -96,6 +99,19 @@ export default function MultiPlayerGame() {
     initialCurrentPlayer === playerName
   );
   const [emoji, setEmoji] = useState<string>('');
+  const [popupVisible, setPopupVisible] = useState<boolean>(false);
+  const gameInstructions = `🤖 The Bot has a secret word up its sleeve.
+
+🎯 Your mission: Compete against each other to guess the word in as few attempts as possible.
+
+💡 After each guess, the Bot will drop a clue connecting the guess to the secret word.
+
+🔄 Players take turns guessing. Use the hints from other players' guesses!
+
+🏆 The player who guesses the word correctly wins the game!
+
+Good luck, and may the best word detectives win!
+`;
 
   const confettiRef = useRef<any>(null);
   const { ws } = useWebSocket();
@@ -108,6 +124,22 @@ export default function MultiPlayerGame() {
       };
     }
   }, [ws]);
+
+  useEffect(() => {
+    const checkFirstVisit = async () => {
+      try {
+        const hasVisited = await AsyncStorage.getItem('hasVisitedMultiPlayer');
+        if (hasVisited === null) {
+          setPopupVisible(true);
+          await AsyncStorage.setItem('hasVisitedMultiPlayer', 'true');
+        }
+      } catch (error) {
+        console.error('Error checking first visit:', error);
+      }
+    };
+
+    checkFirstVisit();
+  }, []);
 
   const handleGameStateUpdate = (data: any) => {
     console.log('Received WebSocket message:', data);
@@ -235,6 +267,10 @@ export default function MultiPlayerGame() {
     }
   };
 
+  const toggleInstructions = () => {
+    setPopupVisible(!popupVisible);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -244,6 +280,9 @@ export default function MultiPlayerGame() {
           goToIndex={true} 
           confirmMessage="Are you sure you want to leave the game?"
         />
+        <TouchableOpacity style={styles.instructionsButton} onPress={toggleInstructions}>
+          <Info color="#1E2A3A" size={24} />
+        </TouchableOpacity>
         <MotiView
           from={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -422,6 +461,13 @@ export default function MultiPlayerGame() {
             </View>
           </View>
         </Modal>
+
+        <Popup
+          isVisible={popupVisible}
+          onClose={toggleInstructions}
+          title="Welcome to Beat the Bot!"
+          content={gameInstructions}
+        />
       </View>
     </SafeAreaView>
   );
