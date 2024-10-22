@@ -16,6 +16,7 @@ const HintBox: React.FC<HintBoxProps> = ({ isVisible, onClose, sessionId, onWord
   const [wordLength, setWordLength] = useState<number | null>(null);
 
   const handleReplaceWord = () => {
+    console.log('Replacing word');
     const confirmMessage = "Are you sure you want to switch the secret word?";
 
     if (Platform.OS === 'web') {
@@ -70,6 +71,7 @@ const HintBox: React.FC<HintBoxProps> = ({ isVisible, onClose, sessionId, onWord
   };
 
   const handleRevealWordLength = async () => {
+    console.log('Revealing word length');
     try {
       const postData = {
         sessionId: sessionId,
@@ -138,9 +140,6 @@ const HintBox: React.FC<HintBoxProps> = ({ isVisible, onClose, sessionId, onWord
               </View>
             </CustomButton>
           </View>
-          {wordLength !== null && (
-            <Text style={styles.wordLengthText}>Word Length: {wordLength}</Text>
-          )}
         </View>
       </View>
     </Modal>

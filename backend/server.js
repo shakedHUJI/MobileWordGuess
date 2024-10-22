@@ -56,13 +56,13 @@ function loadRandomWord() {
   try {
     const filePath = path.join(__dirname, "words.json");
     console.log("Attempting to read words from:", filePath);
-    
+
     const data = fs.readFileSync(filePath, "utf8");
     console.log("File read successfully");
-    
+
     const words = JSON.parse(data);
     console.log("JSON parsed successfully");
-    
+
     const nouns = words.nouns;
     console.log("Number of words available:", nouns.length);
 
@@ -270,37 +270,51 @@ function logGames() {
 app.post("/replace-word", (req, res) => {
   console.log("Received request to replace word");
   console.log("Request body:", req.body);
-  
+
   const { sessionId, mode } = req.body;
 
   console.log("Session ID received:", sessionId);
   console.log("Mode received:", mode);
   console.log("All current sessions:", Object.keys(sessions));
 
-  if (mode !== 'single') {
+  if (mode !== "single") {
     console.log("Invalid mode. Expected 'single', received:", mode);
     return res.status(400).json({ success: false, message: "Invalid mode" });
   }
 
   if (!sessionId || !sessions[sessionId]) {
-    console.log("Invalid session ID. Sessions available:", Object.keys(sessions));
-    return res.status(400).json({ success: false, message: "Invalid session ID" });
+    console.log(
+      "Invalid session ID. Sessions available:",
+      Object.keys(sessions)
+    );
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid session ID" });
   }
 
   try {
-    console.log("Current secret word for session:", sessions[sessionId].secretWord);
+    console.log(
+      "Current secret word for session:",
+      sessions[sessionId].secretWord
+    );
     const newWord = loadRandomWord();
     console.log("New word generated:", newWord);
-    
+
     sessions[sessionId].secretWord = newWord;
     console.log(`New secret word set for session ${sessionId}: ${newWord}`);
-    
+
     res.json({ success: true, message: "Word replaced successfully" });
     console.log("Response sent: Word replaced successfully");
   } catch (error) {
     console.error("Error replacing word:", error);
     console.error("Error stack:", error.stack);
-    res.status(500).json({ success: false, message: "Failed to replace word", error: error.message });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to replace word",
+        error: error.message,
+      });
     console.log("Response sent: Failed to replace word");
   }
 });
@@ -309,34 +323,45 @@ app.post("/replace-word", (req, res) => {
 app.post("/reveal-word-length", (req, res) => {
   console.log("Received request to reveal word length");
   console.log("Request body:", req.body);
-  
+
   const { sessionId, mode } = req.body;
 
   console.log("Session ID received:", sessionId);
   console.log("Mode received:", mode);
   console.log("All current sessions:", Object.keys(sessions));
 
-  if (mode !== 'single') {
+  if (mode !== "single") {
     console.log("Invalid mode. Expected 'single', received:", mode);
     return res.status(400).json({ success: false, message: "Invalid mode" });
   }
 
   if (!sessionId || !sessions[sessionId]) {
-    console.log("Invalid session ID. Sessions available:", Object.keys(sessions));
-    return res.status(400).json({ success: false, message: "Invalid session ID" });
+    console.log(
+      "Invalid session ID. Sessions available:",
+      Object.keys(sessions)
+    );
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid session ID" });
   }
 
   try {
     const secretWord = sessions[sessionId].secretWord;
-    const wordLength = secretWord.length;
+    const wordLength = secretWord[0].length;
     console.log(`Word length for session ${sessionId}: ${wordLength}`);
-    
+
     res.json({ success: true, wordLength: wordLength });
     console.log("Response sent: Word length revealed successfully");
   } catch (error) {
     console.error("Error revealing word length:", error);
     console.error("Error stack:", error.stack);
-    res.status(500).json({ success: false, message: "Failed to reveal word length", error: error.message });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to reveal word length",
+        error: error.message,
+      });
     console.log("Response sent: Failed to reveal word length");
   }
 });
