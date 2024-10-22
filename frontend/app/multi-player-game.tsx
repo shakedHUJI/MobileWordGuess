@@ -96,6 +96,8 @@ export default function MultiPlayerGame() {
     initialCurrentPlayer === playerName
   );
   const [emoji, setEmoji] = useState<string>('');
+  const [isExceedingLimit, setIsExceedingLimit] = useState<boolean>(false);
+  const [isExceedingSpaceLimit, setIsExceedingSpaceLimit] = useState<boolean>(false);
 
   const confettiRef = useRef<any>(null);
   const { ws } = useWebSocket();
@@ -108,6 +110,11 @@ export default function MultiPlayerGame() {
       };
     }
   }, [ws]);
+
+  useEffect(() => {
+    setIsExceedingLimit(userGuess.length >= 30);
+    setIsExceedingSpaceLimit(userGuess.split(' ').length > 2);
+  }, [userGuess]);
 
   const handleGameStateUpdate = (data: any) => {
     console.log('Received WebSocket message:', data);
@@ -188,7 +195,7 @@ export default function MultiPlayerGame() {
   };
 
   const handleGuessSubmission = () => {
-    if (!userGuess.trim() || isSubmitDisabled || isLoading) return;
+    if (!userGuess.trim() || isSubmitDisabled || isLoading || isExceedingLimit || isExceedingSpaceLimit) return;
 
     setIsLoading(true);
     if (ws && ws.readyState === WebSocket.OPEN) {
@@ -300,7 +307,24 @@ export default function MultiPlayerGame() {
                     placeholder="Enter your guess..."
                     placeholderTextColor="#888"
                     value={userGuess}
-                    onChangeText={setUserGuess}
+                    onChangeText={(text) => {
+                      let newText = text;
+                      const spaceCount = text.split(' ').length - 1;
+                      
+                      if (spaceCount > 1) {
+                        // If there's more than one space, remove extra spaces
+                        newText = text.replace(/\s+/g, ' ').trim();
+                        setIsExceedingSpaceLimit(true);
+                      } else {
+                        setIsExceedingSpaceLimit(false);
+                      }
+
+                      if (newText.length <= 30) {
+                        setUserGuess(newText);
+                      }
+                      setIsExceedingLimit(newText.length >= 30);
+                    }}
+                    maxLength={30}
                     editable={!isSubmitDisabled && !isLoading}
                     onKeyPress={handleKeyPress}
                     onSubmitEditing={handleGuessSubmission}
@@ -308,14 +332,24 @@ export default function MultiPlayerGame() {
                   <CustomButton
                     style={[
                       styles.sendButton,
-                      (isSubmitDisabled || isLoading) && styles.buttonDisabled,
+                      (isSubmitDisabled || isLoading || isExceedingLimit || isExceedingSpaceLimit) && styles.buttonDisabled,
                     ]}
                     onPress={handleGuessSubmission}
-                    disabled={isSubmitDisabled || isLoading}
+                    disabled={isSubmitDisabled || isLoading || isExceedingLimit || isExceedingSpaceLimit}
                   >
                     <Send color="#1E2A3A" size={24} />
                   </CustomButton>
                 </View>
+                {isExceedingLimit && (
+                  <Text style={styles.errorText}>
+                    Character limit reached (max 30 characters)
+                  </Text>
+                )}
+                {isExceedingSpaceLimit && (
+                  <Text style={styles.errorText}>
+                    Only one space allowed
+                  </Text>
+                )}
                 <Text style={styles.guessCounter}>
                   Your Guesses: {playerGuesses[playerName] || 0}
                 </Text>
