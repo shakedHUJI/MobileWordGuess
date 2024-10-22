@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
   },
   popupHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
   },
@@ -430,6 +430,39 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 12,
     marginTop: 5,
+  },
+  bulbButton: {
+    backgroundColor: secondaryColor,
+    borderRadius: 50,
+    padding: 10,
+    marginLeft: 10,
+
+
+  },
+  hintButtonContainer: {
+    marginTop: 20,
+    width: '100%',
+    alignItems: 'center',
+  },
+  hintButton: {
+    backgroundColor: secondaryColor,
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+    width: '80%',
+  },
+  hintButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hintButtonIcon: {
+    marginRight: 10,
+  },
+  hintButtonText: {
+    color: '#1E2A3A',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

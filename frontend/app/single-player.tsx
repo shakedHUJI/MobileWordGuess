@@ -22,6 +22,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import BackButton from '../components/BackButton';
 import Popup from '../components/Popup';
 import HintButton from '../components/HintButton';
+import HintBox from '../components/HintBox';
 
 
 // Define the props type for AnimatedBackground
@@ -100,6 +101,7 @@ Good luck, and may the sharpest mind win!
 `;
   const [isExceedingLimit, setIsExceedingLimit] = useState<boolean>(false);
   const [isExceedingSpaceLimit, setIsExceedingSpaceLimit] = useState<boolean>(false);
+  const [isHintBoxVisible, setIsHintBoxVisible] = useState<boolean>(false);
 
   const confettiRef = useRef<any>(null);
 
@@ -219,8 +221,19 @@ Good luck, and may the sharpest mind win!
   };
 
   const handleHintPress = () => {
-    // Implement hint functionality here
-    Alert.alert('Hint', 'Hint functionality coming soon!');
+    setIsHintBoxVisible(true);
+  };
+
+  const handleWordChanged = () => {
+    // Reset game state
+    setIsGameWon(false);
+    setIsGameOver(false);
+    setResponse('');
+    setUserGuess('');
+    setGuessCount(0);
+    setHistory([]);
+    setEmoji('');
+    setFeedbackMessage('');
   };
 
   return (
@@ -366,7 +379,7 @@ Good luck, and may the sharpest mind win!
                   {isSideMenuVisible ? 'Hide Guess History' : 'Show Guess History'}
                 </Text>
               </CustomButton>
-              <HintButton onPress={handleHintPress}/>
+              <HintButton onPress={handleHintPress} />
             </View>
           )}
 
@@ -431,6 +444,13 @@ Good luck, and may the sharpest mind win!
           onClose={toggleInstructions}
           title="Welcome to Beat the Bot!"
           content={gameInstructions}
+        />
+
+        <HintBox
+          isVisible={isHintBoxVisible}
+          onClose={() => setIsHintBoxVisible(false)}
+          sessionId={sessionId}
+          onWordChanged={handleWordChanged}
         />
       </View>
     </SafeAreaView>

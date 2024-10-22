@@ -249,6 +249,25 @@ function logGames() {
   });
 }
 
+// Add this new route
+app.post("/replace-word", (req, res) => {
+  const { sessionId } = req.body;
+
+  if (!sessionId || !sessions[sessionId]) {
+    return res.status(400).json({ success: false, message: "Invalid session ID" });
+  }
+
+  try {
+    const newWord = loadRandomWord();
+    sessions[sessionId].secretWord = newWord;
+    console.log(`New secret word for session ${sessionId}: ${newWord}`);
+    res.json({ success: true, message: "Word replaced successfully" });
+  } catch (error) {
+    console.error("Error replacing word:", error);
+    res.status(500).json({ success: false, message: "Failed to replace word" });
+  }
+});
+
 // WebSocket connection handler
 wss.on("connection", (ws) => {
   console.log("New WebSocket connection established");
