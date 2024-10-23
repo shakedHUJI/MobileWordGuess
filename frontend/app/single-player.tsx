@@ -1,6 +1,6 @@
 // @single-player.tsx
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Text,
   View,
@@ -182,6 +182,7 @@ Good luck, and may the sharpest mind win!
   const [wordLength, setWordLength] = useState<number | null>(null);
   const [isWordLengthRevealed, setIsWordLengthRevealed] = useState<boolean>(false);
   const [revealedCharacters, setRevealedCharacters] = useState<{ [key: number]: string }>({});
+  const [revealedCharCount, setRevealedCharCount] = useState<number>(0);
 
   const confettiRef = useRef<any>(null);
 
@@ -281,8 +282,13 @@ Good luck, and may the sharpest mind win!
     setSessionId(generateSessionId());
     setEmoji('');
     setFeedbackMessage('');
-    setWordLength(null); // Reset wordLength to null
+    setWordLength(null);
+    setIsWordLengthRevealed(false);
     setRevealedCharacters({});
+    setRevealedCharCount(0);
+    setIsExceedingLimit(false);
+    setIsExceedingSpaceLimit(false);
+    setIsHintBoxVisible(false);
 
     fetch(`${serverUrl}/generate`, {
       method: 'POST',
@@ -314,17 +320,7 @@ Good luck, and may the sharpest mind win!
   };
 
   const handleWordChanged = () => {
-    // Reset game state
-    setIsGameWon(false);
-    setIsGameOver(false);
-    setResponse('');
-    setUserGuess([]); // Reset userGuess array
-    setGuessCount(0);
-    setHistory([]);
-    setEmoji('');
-    setFeedbackMessage('');
-    setWordLength(null); // Reset wordLength to null
-    setRevealedCharacters({});
+    resetGameState();
   };
 
   const handleRevealWordLength = async () => {
@@ -364,10 +360,12 @@ Good luck, and may the sharpest mind win!
     setWordLength(length);
     setUserGuess(Array(length || 0).fill('')); // Initialize userGuess array
     setIsWordLengthRevealed(true);
+    setRevealedCharCount(0); // Reset the revealed character count
   };
 
   const handleCharacterRevealed = (index: number, character: string) => {
     setRevealedCharacters((prev) => ({ ...prev, [index]: character }));
+    setRevealedCharCount((prev) => prev + 1);
   };
 
   const renderSendButton = () => {
@@ -406,6 +404,12 @@ Good luck, and may the sharpest mind win!
       );
     }
   };
+
+  // Add this memoized value to calculate the maximum allowed reveals
+  const maxReveals = useMemo(() => {
+    if (!wordLength) return 0;
+    return Math.ceil(wordLength / 3);
+  }, [wordLength]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -633,6 +637,8 @@ Good luck, and may the sharpest mind win!
           onWordLengthRevealed={handleWordLengthRevealed}
           isWordLengthRevealed={isWordLengthRevealed}
           onCharacterRevealed={handleCharacterRevealed}
+          revealedCharCount={revealedCharCount}
+          maxReveals={maxReveals}
         />
       </View>
     </SafeAreaView>

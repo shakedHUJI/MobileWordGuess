@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Modal, TouchableOpacity, Alert, Platform } from 'react-native';
 import { X, Eye, Ruler, RefreshCw } from 'lucide-react-native';
 import styles from '../styles/styles';
@@ -13,6 +13,8 @@ interface HintBoxProps {
   onWordLengthRevealed: (length: number | null) => void;
   isWordLengthRevealed: boolean;
   onCharacterRevealed: (index: number, character: string) => void;
+  revealedCharCount: number;
+  maxReveals: number;
 }
 
 const HintBox: React.FC<HintBoxProps> = ({
@@ -24,8 +26,17 @@ const HintBox: React.FC<HintBoxProps> = ({
   onWordLengthRevealed,
   isWordLengthRevealed,
   onCharacterRevealed,
+  revealedCharCount,
+  maxReveals,
 }) => {
   const [wordLength, setWordLength] = useState<number | null>(null);
+
+  // Reset internal state when isWordLengthRevealed changes
+  useEffect(() => {
+    if (!isWordLengthRevealed) {
+      setWordLength(null);
+    }
+  }, [isWordLengthRevealed]);
 
   const handleReplaceWord = () => {
     console.log('Replacing word');
@@ -72,7 +83,7 @@ const HintBox: React.FC<HintBoxProps> = ({
       const data = await response.json();
       if (data.success) {
         onWordChanged();
-        onWordLengthRevealed(null); // This is now correct
+        setWordLength(null);
         Alert.alert('Success', 'The word has been replaced. Good luck!');
       } else {
         throw new Error(data.message || 'Failed to replace word');
@@ -118,6 +129,11 @@ const HintBox: React.FC<HintBoxProps> = ({
   };
 
   const handleRevealCharacter = async () => {
+    if (revealedCharCount >= maxReveals) {
+      Alert.alert('Hint Limit Reached', 'You have used the maximum number of character reveals for this word.');
+      return;
+    }
+
     console.log('Revealing character');
     try {
       const postData = {
@@ -168,16 +184,7 @@ const HintBox: React.FC<HintBoxProps> = ({
             <Text style={styles.popupTitle}>Hint Options</Text>
           </View>
           <View style={styles.hintButtonContainer}>
-            <CustomButton
-              style={[styles.hintButton, !isWordLengthRevealed && styles.disabledButton]}
-              onPress={handleRevealCharacter}
-              disabled={!isWordLengthRevealed}
-            >
-              <View style={styles.hintButtonContent}>
-                <Eye color="#1E2A3A" size={24} style={styles.hintButtonIcon} />
-                <Text style={styles.hintButtonText}>Reveal Character</Text>
-              </View>
-            </CustomButton>
+            {/* Reveal Word Length button */}
             <CustomButton
               style={[styles.hintButton, isWordLengthRevealed && styles.disabledButton]}
               onPress={handleRevealWordLength}
@@ -188,6 +195,25 @@ const HintBox: React.FC<HintBoxProps> = ({
                 <Text style={styles.hintButtonText}>Reveal Word Length</Text>
               </View>
             </CustomButton>
+
+            {/* Reveal Character button */}
+            <CustomButton
+              style={[
+                styles.hintButton,
+                (!isWordLengthRevealed || revealedCharCount >= maxReveals) && styles.disabledButton
+              ]}
+              onPress={handleRevealCharacter}
+              disabled={!isWordLengthRevealed || revealedCharCount >= maxReveals}
+            >
+              <View style={styles.hintButtonContent}>
+                <Eye color="#1E2A3A" size={24} style={styles.hintButtonIcon} />
+                <Text style={styles.hintButtonText}>
+                  Reveal Character ({revealedCharCount}/{maxReveals})
+                </Text>
+              </View>
+            </CustomButton>
+
+            {/* Replace Word button */}
             <CustomButton style={styles.hintButton} onPress={handleReplaceWord}>
               <View style={styles.hintButtonContent}>
                 <RefreshCw color="#1E2A3A" size={24} style={styles.hintButtonIcon} />
