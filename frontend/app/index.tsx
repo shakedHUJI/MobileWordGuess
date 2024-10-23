@@ -65,7 +65,7 @@ export default function MainScreen() {
             <View style={styles.buttonContainer}>
               <CustomButton
                 style={styles.button}
-                onPress={() => router.push('/single-player')}
+                onPress={() => router.push('/single-player-setup')}
               >
                 <UserCircle color="#1E2A3A" size={24} style={styles.buttonIcon} />
                 <Text style={styles.buttonText}>Single player</Text>

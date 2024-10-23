@@ -16,7 +16,7 @@ import {
   Dimensions,
 } from 'react-native';
 import styles from '../styles/styles';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import CustomButton from '../components/CustomButton';
 import { Send, History, X, Wand2, Info } from 'lucide-react-native';
 import { MotiView } from 'moti';
@@ -154,6 +154,7 @@ const SeparatedInputBoxes: React.FC<{
 
 export default function SinglePlayerGame() {
   const router = useRouter();
+  const { botStyle } = useLocalSearchParams<{ botStyle: string }>();
   const [sessionId, setSessionId] = useState<string>(generateSessionId());
   const [guessCount, setGuessCount] = useState<number>(0);
   const [userGuess, setUserGuess] = useState<string[]>([]); // Changed to array of strings
@@ -212,6 +213,38 @@ Good luck, and may the sharpest mind win!
     setIsExceedingLimit(userGuess.join('').length >= 30);
     setIsExceedingSpaceLimit(userGuess.join('').split(' ').length > 2);
   }, [userGuess]);
+
+  useEffect(() => {
+    const initGame = async () => {
+      try {
+        const response = await fetch(`${serverUrl}/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            mode: 'single',
+            sessionId: sessionId,
+            generateNewWord: 'true',
+            botStyle: botStyle,
+          }).toString(),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to initialize game');
+        }
+        
+        const data = await response.json();
+        console.log('Game initialized with bot style:', botStyle);
+        // Don't update game UI here, as we haven't made a guess yet
+      } catch (error) {
+        console.error('Error initializing game:', error);
+        Alert.alert('Error', 'Failed to start the game. Please try again.');
+      }
+    };
+
+    initGame();
+  }, [sessionId, botStyle]);
 
   const handleGuessSubmission = async () => {
     if (userGuess.join('').trim() === '') return;

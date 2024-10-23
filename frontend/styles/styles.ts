@@ -494,6 +494,31 @@ const styles = StyleSheet.create({
     opacity: 0.5,
     backgroundColor: '#555', // Add this line to change the background color when disabled
   },
+  botSelectionContainer: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  botOption: {
+    backgroundColor: 'rgba(42, 60, 80, 0.8)',
+    padding: 15,
+    borderRadius: 10,
+    marginVertical: 5,
+    borderWidth: 1,
+    borderColor: secondaryColor,
+  },
+  selectedBotOption: {
+    backgroundColor: 'rgba(0, 255, 255, 0.2)',
+    borderColor: primaryColor,
+  },
+  botOptionText: {
+    color: textColor,
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  selectedBotOptionText: {
+    color: primaryColor,
+    fontWeight: 'bold',
+  },
 });
 
 export default styles;
