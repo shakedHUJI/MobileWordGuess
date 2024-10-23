@@ -1,4 +1,4 @@
-// single-player.tsx
+// @single-player.tsx
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
@@ -18,14 +18,14 @@ import {
 import styles from '../styles/styles';
 import { useRouter } from 'expo-router';
 import CustomButton from '../components/CustomButton';
-import {  Send, History, X, Wand2, ArrowLeft, Info } from 'lucide-react-native';
+import { Send, History, X, Wand2, Info } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import BackButton from '../components/BackButton';
 import Popup from '../components/Popup';
 import HintButton from '../components/HintButton';
 import HintBox from '../components/HintBox';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Define the props type for AnimatedBackground
 interface AnimatedBackgroundProps {
@@ -74,18 +74,22 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = React.memo(({ emoj
   );
 });
 
-// Add this import at the top of the file
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// Add this new component
+// SeparatedInputBoxes component
 const SeparatedInputBoxes: React.FC<{
   wordLength: number;
-  userGuess: string;
-  onChangeText: (text: string) => void;
+  userGuess: string[];
+  onChangeText: (text: string[]) => void;
   onSubmitEditing: () => void;
   isLoading: boolean;
   revealedCharacters: { [key: number]: string };
-}> = ({ wordLength, userGuess, onChangeText, onSubmitEditing, isLoading, revealedCharacters }) => {
+}> = ({
+  wordLength,
+  userGuess,
+  onChangeText,
+  onSubmitEditing,
+  isLoading,
+  revealedCharacters,
+}) => {
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const [boxSize, setBoxSize] = useState(40); // Default size
 
@@ -96,16 +100,15 @@ const SeparatedInputBoxes: React.FC<{
     const totalSpacing = spacing * (wordLength - 1);
     const availableWidth = containerWidth - totalSpacing;
     const calculatedSize = Math.floor(availableWidth / wordLength);
-    console.log('calculatedSize', calculatedSize);
     setBoxSize(Math.min(calculatedSize, 40)); // Use the smaller of calculated or max size
   }, [wordLength]);
 
   const handleInputChange = (text: string, index: number) => {
     if (revealedCharacters[index]) return; // Prevent changing revealed characters
 
-    const newGuess = userGuess.split('');
+    const newGuess = [...userGuess];
     newGuess[index] = text.toLowerCase();
-    onChangeText(newGuess.join(''));
+    onChangeText(newGuess);
 
     if (text) {
       let nextIndex = index + 1;
@@ -133,7 +136,7 @@ const SeparatedInputBoxes: React.FC<{
           style={[
             localStyles.separatedInput,
             { width: boxSize, height: boxSize, fontSize: boxSize * 0.6 },
-            revealedCharacters[index] ? localStyles.revealedCharacter : {}
+            revealedCharacters[index] ? localStyles.revealedCharacter : {},
           ]}
           value={revealedCharacters[index] || userGuess[index] || ''}
           onChangeText={(text) => handleInputChange(text, index)}
@@ -153,7 +156,7 @@ export default function SinglePlayerGame() {
   const router = useRouter();
   const [sessionId, setSessionId] = useState<string>(generateSessionId());
   const [guessCount, setGuessCount] = useState<number>(0);
-  const [userGuess, setUserGuess] = useState<string>('');
+  const [userGuess, setUserGuess] = useState<string[]>([]); // Changed to array of strings
   const [response, setResponse] = useState<string>('');
   const [emoji, setEmoji] = useState<string>('');
   const [history, setHistory] = useState<{ guess: string; response: string }[]>([]);
@@ -205,22 +208,22 @@ Good luck, and may the sharpest mind win!
   }, []);
 
   useEffect(() => {
-    setIsExceedingLimit(userGuess.length >= 30);
-    setIsExceedingSpaceLimit(userGuess.split(' ').length > 2);
+    setIsExceedingLimit(userGuess.join('').length >= 30);
+    setIsExceedingSpaceLimit(userGuess.join('').split(' ').length > 2);
   }, [userGuess]);
 
   const handleGuessSubmission = async () => {
-    if (!userGuess.trim()) return;
+    if (userGuess.join('').trim() === '') return;
 
     setIsLoading(true);
     setGuessCount(guessCount + 1);
 
     // Create a new guess that includes revealed characters
     const finalGuess = wordLength
-      ? [...Array(wordLength)].map((_, index) => 
+      ? [...Array(wordLength)].map((_, index) =>
           revealedCharacters[index] || userGuess[index] || ''
         ).join('')
-      : userGuess.trim();
+      : userGuess.join('').trim();
 
     const postData: any = {
       userGuess: finalGuess,
@@ -245,14 +248,14 @@ Good luck, and may the sharpest mind win!
       setIsLoading(false);
     }
 
-    setUserGuess('');
+    setUserGuess(Array(wordLength || 0).fill('')); // Clear userGuess array
   };
 
   const updateGameUI = (data: any) => {
     setHistory((prevHistory) => [
       ...prevHistory,
       {
-        guess: data.yourGuess || userGuess,
+        guess: data.yourGuess || userGuess.join(''),
         response: data.response,
       },
     ]);
@@ -272,13 +275,14 @@ Good luck, and may the sharpest mind win!
     setIsGameWon(false);
     setIsGameOver(false);
     setResponse('');
-    setUserGuess('');
+    setUserGuess([]); // Reset userGuess array
     setGuessCount(0);
     setHistory([]);
     setSessionId(generateSessionId());
     setEmoji('');
     setFeedbackMessage('');
     setWordLength(null); // Reset wordLength to null
+    setRevealedCharacters({});
 
     fetch(`${serverUrl}/generate`, {
       method: 'POST',
@@ -314,16 +318,16 @@ Good luck, and may the sharpest mind win!
     setIsGameWon(false);
     setIsGameOver(false);
     setResponse('');
-    setUserGuess('');
+    setUserGuess([]); // Reset userGuess array
     setGuessCount(0);
     setHistory([]);
     setEmoji('');
     setFeedbackMessage('');
     setWordLength(null); // Reset wordLength to null
+    setRevealedCharacters({});
   };
 
   const handleRevealWordLength = async () => {
-    console.log('Revealing word length');
     try {
       const postData = {
         sessionId: sessionId,
@@ -345,6 +349,7 @@ Good luck, and may the sharpest mind win!
       const data = await response.json();
       if (data.success) {
         setWordLength(data.wordLength);
+        setUserGuess(Array(data.wordLength).fill('')); // Initialize userGuess array
         Alert.alert('Word Length', `The secret word is ${data.wordLength} characters long.`);
       } else {
         throw new Error(data.message || 'Failed to reveal word length');
@@ -357,16 +362,19 @@ Good luck, and may the sharpest mind win!
 
   const handleWordLengthRevealed = (length: number | null) => {
     setWordLength(length);
+    setUserGuess(Array(length || 0).fill('')); // Initialize userGuess array
     setIsWordLengthRevealed(true);
   };
 
   const handleCharacterRevealed = (index: number, character: string) => {
-    setRevealedCharacters(prev => ({ ...prev, [index]: character }));
+    setRevealedCharacters((prev) => ({ ...prev, [index]: character }));
   };
 
   const renderSendButton = () => {
     if (wordLength) {
-      const filledCharacters = userGuess.length + Object.keys(revealedCharacters).length;
+      const filledCharacters =
+        userGuess.filter((char) => char && char !== '').length +
+        Object.keys(revealedCharacters).length;
       const isGuessComplete = filledCharacters === wordLength;
 
       return (
@@ -374,7 +382,7 @@ Good luck, and may the sharpest mind win!
           style={[
             styles.sendButtonRevealed,
             (!isGuessComplete || isLoading) && styles.disabledButton,
-            { marginTop: 10 } // Add some space above the button
+            { marginTop: 10 }, // Add some space above the button
           ]}
           onPress={handleGuessSubmission}
           disabled={!isGuessComplete || isLoading}
@@ -386,7 +394,10 @@ Good luck, and may the sharpest mind win!
     } else {
       return (
         <CustomButton
-          style={[styles.sendButton, (isLoading || isExceedingLimit || isExceedingSpaceLimit) && styles.disabledButton]}
+          style={[
+            styles.sendButton,
+            (isLoading || isExceedingLimit || isExceedingSpaceLimit) && styles.disabledButton,
+          ]}
           onPress={handleGuessSubmission}
           disabled={isLoading || isExceedingLimit || isExceedingSpaceLimit}
         >
@@ -472,11 +483,11 @@ Good luck, and may the sharpest mind win!
                       style={styles.input}
                       placeholder="Enter your guess..."
                       placeholderTextColor="#888"
-                      value={userGuess}
+                      value={userGuess.join('')}
                       onChangeText={(text) => {
                         let newText = text;
                         const spaceCount = text.split(' ').length - 1;
-                        
+
                         if (spaceCount > 1) {
                           newText = text.replace(/\s+/g, ' ').trim();
                           setIsExceedingSpaceLimit(true);
@@ -485,7 +496,7 @@ Good luck, and may the sharpest mind win!
                         }
 
                         if (newText.length <= 30) {
-                          setUserGuess(newText);
+                          setUserGuess(newText.split(''));
                         }
                         setIsExceedingLimit(newText.length >= 30);
                       }}
@@ -503,9 +514,7 @@ Good luck, and may the sharpest mind win!
                   </Text>
                 )}
                 {isExceedingSpaceLimit && (
-                  <Text style={styles.errorText}>
-                    Only one space allowed
-                  </Text>
+                  <Text style={styles.errorText}>Only one space allowed</Text>
                 )}
                 <Text style={styles.guessCounter}>Attempts: {guessCount}</Text>
                 {isLoading ? (
@@ -644,6 +653,7 @@ const localStyles = StyleSheet.create({
     margin: 3,
     marginBottom: 0,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    color: '#000',
   },
   revealedSendButtonContainer: {
     width: '100%',
