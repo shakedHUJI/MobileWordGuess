@@ -15,6 +15,7 @@ interface HintBoxProps {
   onCharacterRevealed: (index: number, character: string) => void;
   revealedCharCount: number;
   maxReveals: number;
+  guessCount: number; // Add this prop
 }
 
 const HintBox: React.FC<HintBoxProps> = ({
@@ -28,6 +29,7 @@ const HintBox: React.FC<HintBoxProps> = ({
   onCharacterRevealed,
   revealedCharCount,
   maxReveals,
+  guessCount, // Add this prop
 }) => {
   const [wordLength, setWordLength] = useState<number | null>(null);
 
@@ -186,13 +188,19 @@ const HintBox: React.FC<HintBoxProps> = ({
           <View style={styles.hintButtonContainer}>
             {/* Reveal Word Length button */}
             <CustomButton
-              style={[styles.hintButton, isWordLengthRevealed && styles.disabledButton]}
+              style={[
+                styles.hintButton, 
+                (isWordLengthRevealed || guessCount === 0) && styles.disabledButton
+              ]}
               onPress={handleRevealWordLength}
-              disabled={isWordLengthRevealed}
+              disabled={isWordLengthRevealed || guessCount === 0}
             >
               <View style={styles.hintButtonContent}>
                 <Ruler color="#1E2A3A" size={24} style={styles.hintButtonIcon} />
-                <Text style={styles.hintButtonText}>Reveal Word Length</Text>
+                <Text style={styles.hintButtonText}>
+                  Reveal Word Length
+                  {guessCount === 0 ? " (Make a guess first)" : ""}
+                </Text>
               </View>
             </CustomButton>
 

@@ -461,7 +461,7 @@ Good luck, and may the sharpest mind win!
                     </CustomButton>
                     <CustomButton style={styles.button} onPress={() => router.replace('/')}>
                       <Text style={styles.buttonText}>Return to Main Menu</Text>
-                    </CustomButton>
+                    </CustomButton>k
                   </View>
                 </View>
               )
@@ -639,6 +639,7 @@ Good luck, and may the sharpest mind win!
           onCharacterRevealed={handleCharacterRevealed}
           revealedCharCount={revealedCharCount}
           maxReveals={maxReveals}
+          guessCount={guessCount} // Add this prop
         />
       </View>
     </SafeAreaView>
