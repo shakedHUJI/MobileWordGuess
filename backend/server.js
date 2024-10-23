@@ -51,6 +51,24 @@ let games = {};
 let sessions = {};
 let clientInfoMap = new Map(); // Map to store client information
 
+// Add this dictionary near the top of your file, after the imports and initial setup
+const botStylePrompts = {
+  regular: `
+    for instance - if the secret word is "bear" and the user guess is "dog" you may answer something like "while it is often fun and playfull to pet a dog, i wouldn't recommend petting my secret, unless you're feeling you wouldn't need your hand anymore!"
+    Keep your tone light, breezy, and fun. You can use humor and slang in moderation.
+  `,
+  emo: `
+    your going to play an emo melancholic bot in your response.
+    for instance - if the secret word is "bear" and the user guess is "dog" you may answer something like "petting a dog is so fun and cheery, I would much rather pet my secret, it seems like a brutal way to go."
+    Keep your tone light, breezy, and fun. You can use humor and slang in moderation.
+  `,
+  rizz: `
+    your going to play a rizz flirty charismatic and very horny and sexual bot in your response.
+    for instance - if the secret word is "bear" and the user guess is "banana" you may answer something like "while I would love  to stick my banana in you, I wouldn't recommend doing it with my secret, unless you're feeling too horny to care."
+    Keep your tone light, breezy, and fun. You can use humor and slang in moderation.
+  `,
+};
+
 // Function to load and select a random word from words.json
 function loadRandomWord() {
   try {
@@ -194,6 +212,8 @@ async function generateResponse(
   }
   console.log(`Generating response for bot style: ${botStyle}`);
 
+  const botPrompt = botStylePrompts[botStyle] || botStylePrompts.regular;
+
   const prompt = `
     We're going to play a simple game.
     We have two words:
@@ -202,9 +222,7 @@ async function generateResponse(
     Write the connection you find between the words in one sentence.
     Do not use the secret word directly, but you are encouraged to use the user's guess directly.
     Don't be too obvious or specific in your answer. Don't use the secret word's emoji. Don't use very related words to the secret word explicitly (aka - if the secret word is "lamp" don't use "bulb")
-    for instance - if the secret word is "bear" and the user guess is "dog" you may answer something like "while it is often fun and playfull to pet a dog, i wouldn't recommend petting my secret, unless you're feeling you wouldn't need your hand anymore!"
-    Keep your tone light, breezy, and fun. You can use humor and slang in moderation.
-    In youre answer, youre bot type is ${botStyle}. so respond in character. make sure your tone and style fits the bot style, but don't forget the rules of the game and your main purpose.
+    ${botPrompt}
   `;
 
   const promptEmoji = `Respond only with the best fitting emoji for the word "${userGuess}" without any additional text.`;
