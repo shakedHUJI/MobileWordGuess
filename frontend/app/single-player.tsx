@@ -540,7 +540,6 @@ Good luck, and may the sharpest mind win!
                       maxLength={30}
                       editable={!isLoading}
                       onKeyPress={handleKeyPress}
-                      onSubmitEditing={handleGuessSubmission}
                     />
                     {renderSendButton()}
                   </View>

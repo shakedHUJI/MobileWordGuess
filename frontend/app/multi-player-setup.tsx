@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import React, { useState } from 'react';
+import { View, Text, SafeAreaView, TouchableOpacity } from 'react-native';
+import {  useLocalSearchParams } from 'expo-router';
 import { PlayCircle } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import CustomButton from '../components/CustomButton';
 import styles from '../styles/styles';
 import BackButton from '../components/BackButton';
 import { useWebSocket } from './WebSocketProvider';
+import { botStyles, BotStyle } from '../constants/gameConstants';
 
 const AnimatedBackground = React.memo(() => {
   return (
@@ -47,51 +48,21 @@ const AnimatedBackground = React.memo(() => {
   );
 });
 
-const botStyles = [
-  { id: 'regular', name: 'Regular Bot' },
-  { id: 'emo', name: 'Emo Bot' },
-  { id: 'rizz', name: 'Rizz Bot' },
-];
-
 export default function MultiPlayerSetup() {
-  const router = useRouter();
   const { playerName } = useLocalSearchParams<{ playerName: string }>();
-  const [selectedBot, setSelectedBot] = useState(botStyles[0].id);
-  const { ws, isConnected } = useWebSocket();
-
-  // Add useEffect to handle WebSocket messages
-  useEffect(() => {
-    if (isConnected && ws) {
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.action === 'game_created') {
-          router.push({
-            pathname: '/game-lobby',
-            params: {
-              playerName: data.playerName,
-              gameId: data.gameId,
-              players: JSON.stringify([data.playerName]),
-              isHost: 'true',
-            },
-          });
-        }
-      };
-    }
-  }, [isConnected, ws]);
+  const [selectedBot, setSelectedBot] = useState<BotStyle>(botStyles[0].id);
+  const { ws } = useWebSocket();
 
   const createGame = () => {
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-      Alert.alert('Error', 'Not connected to the server. Please try again.');
-      return;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(
+        JSON.stringify({
+          action: 'create_game',
+          playerName,
+          botStyle: selectedBot,
+        })
+      );
     }
-
-    ws.send(
-      JSON.stringify({
-        action: 'create_game',
-        playerName,
-        botStyle: selectedBot,
-      })
-    );
   };
 
   return (
@@ -133,18 +104,9 @@ export default function MultiPlayerSetup() {
             </View>
 
             <View style={styles.buttonContainer}>
-              <CustomButton 
-                style={[
-                  styles.button,
-                  !isConnected && styles.buttonDisabled
-                ]} 
-                onPress={createGame}
-                disabled={!isConnected}
-              >
+              <CustomButton style={styles.button} onPress={createGame}>
                 <PlayCircle color="#1E2A3A" size={24} style={styles.buttonIcon} />
-                <Text style={styles.buttonText}>
-                  {isConnected ? 'Create Game Lobby' : 'Connecting...'}
-                </Text>
+                <Text style={styles.buttonText}>Create Game Lobby</Text>
               </CustomButton>
             </View>
           </View>

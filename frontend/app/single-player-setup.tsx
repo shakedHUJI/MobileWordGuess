@@ -6,6 +6,7 @@ import { MotiView } from 'moti';
 import CustomButton from '../components/CustomButton';
 import styles from '../styles/styles';
 import BackButton from '../components/BackButton';
+import { botStyles, BotStyle } from '../constants/gameConstants';
 
 const AnimatedBackground = React.memo(() => {
   return (
@@ -46,15 +47,9 @@ const AnimatedBackground = React.memo(() => {
   );
 });
 
-const botStyles = [
-  { id: 'regular', name: 'Regular Bot' },
-  { id: 'emo', name: 'Emo Bot' },
-  { id: 'rizz', name: 'Rizz Bot' },
-];
-
 export default function SinglePlayerSetup() {
   const router = useRouter();
-  const [selectedBot, setSelectedBot] = useState(botStyles[0].id);
+  const [selectedBot, setSelectedBot] = useState<BotStyle>(botStyles[0].id);
 
   const startGame = () => {
     router.push({
