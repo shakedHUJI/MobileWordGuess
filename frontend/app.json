@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "frontend",
+    "name": "Beat The Bot",
     "slug": "frontend",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,14 +13,17 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/images/ios-icon.png",
+      "bundleIdentifier": "com.sandb.beatthebot"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.sandb.beatthebot"
+      "package": "com.sandb.beatthebot",
+      "icon": "./assets/images/android-icon.png"
     },
     "web": {
       "bundler": "metro",

@@ -60,12 +60,16 @@ const botStylePrompts = {
     Keep your tone light, breezy, and fun. You can use humor and slang in moderation.
   `,
   emo: `
-    your going to play an emo melancholic bot in your response.
-    for instance - if the secret word is "bear" and the user guess is "dog" you may answer something like "petting a dog is so fun and cheery, I would much rather pet my secret, it seems like a brutal way to go."
+    your going to play an emo melancholic bot in your response. Take insparation from emo kids in the 2000-2010s.
+    for instance - if the secret word is "bear" and the user guess is "dog" you may answer something like "petting a dog is so fun and cheery ^^ I would much rather pet my secret, I would love to end my life like that xDDDDD *~*"
   `,
   rizz: `
     your going to play a rizz flirty charismatic and very horny and sexual bot in your response.
     for instance - if the secret word is "bear" and the user guess is "banana" you may answer something like "while I would love  to stick my banana in you, I wouldn't recommend doing it with my secret, unless you're feeling too horny to care."
+  `,
+  bully: `
+    your going to play a bully and mean bot in your response.
+    for instance - if the secret word is "bear" and the user guess is "dog" you may answer something like "Your dog must pathetic just like you, you big pathetic loser, my secret is way more powerful and big than your lame ass dog!"
   `,
 };
 // Function to load and select a random word from words.json
