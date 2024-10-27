@@ -407,7 +407,6 @@ Good luck, and may the best word detectives win!
                     maxLength={30}
                     editable={!isSubmitDisabled && !isLoading}
                     onKeyPress={handleKeyPress}
-                    onSubmitEditing={handleGuessSubmission}
                   />
                   <CustomButton
                     style={[
