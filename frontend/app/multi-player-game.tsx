@@ -118,6 +118,8 @@ Good luck, and may the best word detectives win!
   const confettiRef = useRef<any>(null);
   const { ws } = useWebSocket();
 
+  const [allPlayers, setAllPlayers] = useState<string[]>([]);
+
   useEffect(() => {
     if (ws) {
       ws.onmessage = (event) => {
@@ -158,12 +160,14 @@ Good luck, and may the best word detectives win!
       );
       setIsSubmitDisabled(data.currentPlayer !== playerName);
       updateGameUI(data);
-    } else if (data.action === 'player_joined' && data.startingPlayer) {
-      setCurrentPlayer(data.startingPlayer);
+    } else if (data.action === 'player_joined') {
+      setAllPlayers(data.players);
+    } else if (data.action === 'game_started') {
+      setCurrentPlayer(data.currentPlayer);
       setTurnIndicator(
-        data.startingPlayer === playerName ? "It's your turn!" : `It's ${data.startingPlayer}'s turn.`
+        data.currentPlayer === playerName ? "It's your turn!" : `It's ${data.currentPlayer}'s turn.`
       );
-      setIsSubmitDisabled(data.startingPlayer !== playerName);
+      setIsSubmitDisabled(data.currentPlayer !== playerName);
     } else if (data.action === 'game_reset') {
       setIsGameWon(false);
       setIsGameOver(false);
@@ -175,6 +179,7 @@ Good luck, and may the best word detectives win!
         data.currentPlayer === playerName ? "It's your turn!" : `It's ${data.currentPlayer}'s turn.`
       );
       setPlayerGuesses({});
+      setAllPlayers(data.players);
     } else if (data.action === 'return_to_lobby') {
       const isHost = data.host === playerName;
       router.push({
@@ -502,6 +507,18 @@ Good luck, and may the best word detectives win!
           title="Welcome to Beat the Bot!"
           content={gameInstructions}
         />
+
+        <View style={styles.playerListContainer}>
+          <Text style={styles.playerListHeader}>Players:</Text>
+          {allPlayers.map((player, index) => (
+            <Text key={index} style={[
+              styles.playerName,
+              player === currentPlayer && styles.currentPlayerName
+            ]}>
+              {player} {player === playerName && '(You)'}
+            </Text>
+          ))}
+        </View>
       </View>
     </SafeAreaView>
   );
