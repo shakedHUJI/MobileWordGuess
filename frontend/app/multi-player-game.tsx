@@ -127,6 +127,9 @@ Good luck, and may the best word detectives win!
   const [wordChangeVotePopupVisible, setWordChangeVotePopupVisible] = useState<boolean>(false);
   const [wordChangeRequester, setWordChangeRequester] = useState<string>('');
 
+  // Add this new state near your other state declarations
+  const [wordChangedPopupVisible, setWordChangedPopupVisible] = useState<boolean>(false);
+
   useEffect(() => {
     if (ws) {
       ws.onmessage = (event) => {
@@ -202,7 +205,14 @@ Good luck, and may the best word detectives win!
       setWordChangeRequester(data.requester);
       setWordChangeVotePopupVisible(true);
     } else if (data.action === 'word_changed') {
-      Alert.alert('Word Changed', data.message);
+      // Reset game UI
+      setWordChangedPopupVisible(true);
+      setHistory([]);
+      setUserGuess('');
+      setResponse('');
+      setEmoji('');
+      setPlayerGuesses({});
+      setShowFirstGuessMessage(true);
     }
   };
 
@@ -614,6 +624,25 @@ Good luck, and may the best word detectives win!
                   <Text style={styles.replaceWordButtonText}>No</Text>
                 </CustomButton>
               </View>
+            </View>
+          }
+        />
+
+        <Popup
+          isVisible={wordChangedPopupVisible}
+          onClose={() => setWordChangedPopupVisible(false)}
+          title="Word Changed"
+          content={
+            <View style={styles.replaceWordContent}>
+              <Text style={styles.replaceWordText}>
+                The secret word has been replaced!
+              </Text>
+              <CustomButton
+                style={[styles.replaceWordButton, styles.replaceWordButtonConfirm]}
+                onPress={() => setWordChangedPopupVisible(false)}
+              >
+                <Text style={styles.replaceWordButtonText}>OK</Text>
+              </CustomButton>
             </View>
           }
         />
