@@ -20,11 +20,9 @@ const Popup: React.FC<PopupProps> = ({ isVisible, onClose, title, content }) => 
     >
       <View style={styles.modalOverlay}>
         <View style={styles.popupContainer}>
-            <View style={styles.closeButtonContainer}>
-            <TouchableOpacity onPress={onClose} style={[styles.closeButton]}>
-              <X color="#1E2A3A" size={24} />
-            </TouchableOpacity>
-            </View>
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <X color="#1E2A3A" size={24} />
+          </TouchableOpacity>
           <View style={styles.popupHeader}>
             <Text style={styles.popupTitle}>{title}</Text>
           </View>

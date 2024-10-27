@@ -14,6 +14,7 @@ import CustomButton from '../components/CustomButton';
 import { LogIn } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import BackButton from '../components/BackButton';
+import Popup from '../components/Popup';
 
 const AnimatedBackground = React.memo(() => {
   return (
@@ -61,6 +62,8 @@ const JoinMultiPlayerGame = () => {
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const [isJoining, setIsJoining] = useState(false);
   const { ws } = useWebSocket();
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
 
   useEffect(() => {
     if (ws) {
@@ -80,7 +83,12 @@ const JoinMultiPlayerGame = () => {
               },
             });
           } else {
-            Alert.alert('Magical Mishap', data.message || 'Failed to join the magical realm.');
+            if (data.message === "Player name already taken") {
+              setPopupMessage("This player name is already taken. Please choose a different name.");
+              setPopupVisible(true);
+            } else {
+              Alert.alert('Magical Mishap', data.message || 'Failed to join the magical realm.');
+            }
           }
         }
       };
@@ -159,6 +167,12 @@ const JoinMultiPlayerGame = () => {
       );
     }
   };
+
+  const handlePopupClose = () => {
+    setPopupVisible(false);
+    router.replace('/multi-player-selection');
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -207,6 +221,12 @@ const JoinMultiPlayerGame = () => {
             </View>
           </View>
         </MotiView>
+        <Popup
+          isVisible={popupVisible}
+          onClose={handlePopupClose}
+          title="Name Already Taken"
+          content={popupMessage}
+        />
       </View>
     </SafeAreaView>
   );
