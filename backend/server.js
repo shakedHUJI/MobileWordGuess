@@ -453,6 +453,9 @@ app.post("/reveal-character", (req, res) => {
     });
   }
 });
+
+let wordChangeVotes = {}; // To store votes for word changes
+
 wss.on("connection", (ws) => {
   console.log("New WebSocket connection established");
   ws.on("message", (message) => {
@@ -616,6 +619,57 @@ wss.on("connection", (ws) => {
 
             host: game.host,
           });
+        }
+      } else if (data.action === "request_word_change") {
+        const { gameId, playerName } = data;
+        const game = games[gameId];
+
+        if (game) {
+          // Initialize voting session
+          wordChangeVotes[gameId] = {
+            requester: playerName,
+            votes: {},
+            totalPlayers: game.players.length,
+          };
+
+          // Broadcast the request to all players
+          broadcastGameState(gameId, {
+            action: "word_change_requested",
+            requester: playerName,
+          });
+        }
+      } else if (data.action === "word_change_vote") {
+        const { gameId, playerName, vote } = data;
+        const game = games[gameId];
+
+        if (game && wordChangeVotes[gameId]) {
+          // Record the vote
+          wordChangeVotes[gameId].votes[playerName] = vote;
+
+          // Check if all players have voted
+          const totalVotes = Object.keys(wordChangeVotes[gameId].votes).length;
+
+          // If everyone except the requester has voted
+          if (totalVotes >= wordChangeVotes[gameId].totalPlayers - 1) {
+            // Count 'yes' votes
+            const yesVotes = Object.values(
+              wordChangeVotes[gameId].votes
+            ).filter((v) => v === "yes").length;
+
+            // If more than half of the other players voted yes
+            const votePassed =
+              yesVotes > (wordChangeVotes[gameId].totalPlayers - 1) / 2;
+
+            // Broadcast the result
+            broadcastGameState(gameId, {
+              action: "word_change_vote_result",
+              passed: votePassed,
+              requester: wordChangeVotes[gameId].requester,
+            });
+
+            // Clean up the votes
+            delete wordChangeVotes[gameId];
+          }
         }
       }
     } catch (error) {

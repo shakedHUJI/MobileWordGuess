@@ -18,7 +18,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useWebSocket } from './WebSocketProvider';
 import CustomButton from '../components/CustomButton';
-import { Send, History, X, Info } from 'lucide-react-native';
+import { Send, History, X, Info, RefreshCw } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import BackButton from '../components/BackButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -120,6 +120,13 @@ Good luck, and may the best word detectives win!
 
   const [allPlayers, setAllPlayers] = useState<string[]>([]);
 
+  // Add state for replace word popup
+  const [replaceWordPopupVisible, setReplaceWordPopupVisible] = useState<boolean>(false);
+
+  // Add this new state for the voting popup
+  const [wordChangeVotePopupVisible, setWordChangeVotePopupVisible] = useState<boolean>(false);
+  const [wordChangeRequester, setWordChangeRequester] = useState<string>('');
+
   useEffect(() => {
     if (ws) {
       ws.onmessage = (event) => {
@@ -191,6 +198,9 @@ Good luck, and may the best word detectives win!
           isHost: isHost.toString(),
         },
       });
+    } else if (data.action === 'word_change_requested' && data.requester !== playerName) {
+      setWordChangeRequester(data.requester);
+      setWordChangeVotePopupVisible(true);
     }
   };
 
@@ -281,6 +291,20 @@ Good luck, and may the best word detectives win!
 
   const toggleInstructions = () => {
     setPopupVisible(!popupVisible);
+  };
+
+  // Add the replace word confirmation handler
+  const handleReplaceWordConfirm = () => {
+    setReplaceWordPopupVisible(false);
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(
+        JSON.stringify({
+          action: 'request_word_change',
+          gameId,
+          playerName,
+        })
+      );
+    }
   };
 
   return (
@@ -439,6 +463,12 @@ Good luck, and may the best word detectives win!
                   {isSideMenuVisible ? 'Hide Guess History' : 'Show Guess History'}
                 </Text>
               </CustomButton>
+              <CustomButton
+                style={styles.replaceButton}
+                onPress={() => setReplaceWordPopupVisible(true)}
+              >
+                <RefreshCw color="#1E2A3A" size={24} />
+              </CustomButton>
             </View>
           )}
 
@@ -502,23 +532,90 @@ Good luck, and may the best word detectives win!
         </Modal>
 
         <Popup
+          isVisible={replaceWordPopupVisible}
+          onClose={() => setReplaceWordPopupVisible(false)}
+          title="Replace Word"
+          content={
+            <View style={styles.replaceWordContent}>
+              <Text style={styles.replaceWordText}>
+                Are you sure you want to replace the word?
+              </Text>
+              <View style={styles.replaceWordButtons}>
+                <CustomButton
+                  style={[styles.replaceWordButton, styles.replaceWordButtonConfirm]}
+                  onPress={handleReplaceWordConfirm}
+                >
+                  <Text style={styles.replaceWordButtonText}>Yes</Text>
+                </CustomButton>
+                <CustomButton
+                  style={[styles.replaceWordButton, styles.replaceWordButtonCancel]}
+                  onPress={() => setReplaceWordPopupVisible(false)}
+                >
+                  <Text style={styles.replaceWordButtonText}>No</Text>
+                </CustomButton>
+              </View>
+            </View>
+          }
+        />
+
+        <Popup
           isVisible={popupVisible}
           onClose={toggleInstructions}
           title="Welcome to Beat the Bot!"
           content={gameInstructions}
         />
 
-        <View style={styles.playerListContainer}>
-          <Text style={styles.playerListHeader}>Players:</Text>
-          {allPlayers.map((player, index) => (
-            <Text key={index} style={[
-              styles.playerName,
-              player === currentPlayer && styles.currentPlayerName
-            ]}>
-              {player} {player === playerName && '(You)'}
-            </Text>
-          ))}
-        </View>
+        <Popup
+          isVisible={wordChangeVotePopupVisible}
+          onClose={() => setWordChangeVotePopupVisible(false)}
+          title="Word Change Request"
+          content={
+            <View style={styles.replaceWordContent}>
+              <Text style={styles.replaceWordText}>
+                {wordChangeRequester} requested a word change, do you agree?
+              </Text>
+              <View style={styles.replaceWordButtons}>
+                <CustomButton
+                  style={[styles.replaceWordButton, styles.replaceWordButtonConfirm]}
+                  onPress={() => {
+                    setWordChangeVotePopupVisible(false);
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                      ws.send(
+                        JSON.stringify({
+                          action: 'word_change_vote',
+                          gameId,
+                          playerName,
+                          vote: 'yes'
+                        })
+                      );
+                    }
+                  }}
+                >
+                  <Text style={styles.replaceWordButtonText}>Yes</Text>
+                </CustomButton>
+                <CustomButton
+                  style={[styles.replaceWordButton, styles.replaceWordButtonCancel]}
+                  onPress={() => {
+                    setWordChangeVotePopupVisible(false);
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                      ws.send(
+                        JSON.stringify({
+                          action: 'word_change_vote',
+                          gameId,
+                          playerName,
+                          vote: 'no'
+                        })
+                      );
+                    }
+                  }}
+                >
+                  <Text style={styles.replaceWordButtonText}>No</Text>
+                </CustomButton>
+              </View>
+            </View>
+          }
+        />
+
       </View>
     </SafeAreaView>
   );

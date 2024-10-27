@@ -531,5 +531,45 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
+  // Add these styles to your existing styles object
+  replaceButton: {
+    backgroundColor: '#4ECDC4',
+    padding: 10,
+    borderRadius: 50,
+    marginLeft: 10,
+  },
+  replaceWordContent: {
+    alignItems: 'center',
+    // padding: 20,
+  },
+  replaceWordText: {
+    fontSize: 18,
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  replaceWordButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+  },
+  replaceWordButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  replaceWordButtonConfirm: {
+    backgroundColor: '#4ECDC4',
+  },
+  replaceWordButtonCancel: {
+    backgroundColor: '#FF6B6B',
+  },
+  replaceWordButtonText: {
+    color: '#1E2A3A',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
 export default styles;
