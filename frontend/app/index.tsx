@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, SafeAreaView } from 'react-native';
+import { View, Text, SafeAreaView, Linking, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { UserCircle, Users } from 'lucide-react-native';
+import { UserCircle, Users, Coffee } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import CustomButton from '../components/CustomButton';
 import styles from '../styles/styles';
@@ -48,6 +48,10 @@ const AnimatedBackground = React.memo(() => {
 export default function MainScreen() {
   const router = useRouter();
 
+  const openBuyMeACoffee = () => {
+    Linking.openURL('https://www.buymeacoffee.com/beatthebot');
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -82,6 +86,21 @@ export default function MainScreen() {
             </View>
           </View>
           </View>
+          
+          {/* Buy Me a Coffee button */}
+          <TouchableOpacity 
+            onPress={openBuyMeACoffee}
+            style={styles.buyMeCoffeeButton}
+          >
+            <Coffee 
+              color={'black'} 
+              size={20} 
+              style={styles.buyMeCoffeeIcon} 
+            />
+            <Text style={styles.buyMeCoffeeText}>
+              Buy me a coffee
+            </Text>
+          </TouchableOpacity>
         </MotiView>
       </View>
     </SafeAreaView>

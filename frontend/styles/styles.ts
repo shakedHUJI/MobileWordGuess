@@ -571,5 +571,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  buyMeCoffeeButton: {
+    position: 'absolute',
+    bottom: 20,
+    alignSelf: 'center',  // Changed from right: 20 to alignSelf: 'center'
+    backgroundColor: secondaryColor,
+    padding: 12,
+    borderRadius: 25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  buyMeCoffeeText: {
+    color: backgroundColor,  // Using backgroundColor for better contrast
+    fontWeight: 'bold',
+  },
+  buyMeCoffeeIcon: {
+    marginRight: 8,
+  }
 });
 export default styles;
