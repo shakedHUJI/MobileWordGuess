@@ -206,6 +206,8 @@ async function generateResponse(
   let botStyle = "regular"; // Default bot style
   if (sessionId && sessions[sessionId]) {
     botStyle = sessions[sessionId].botStyle;
+  } else if (gameId && games[gameId]) {
+    botStyle = games[gameId].botStyle;
   }
   console.log(`Generating response for bot style: ${botStyle}`);
   const botPrompt = botStylePrompts[botStyle] || botStylePrompts.regular;
@@ -468,8 +470,9 @@ wss.on("connection", (ws) => {
         games[gameId] = {
           players: [{ name: data.playerName, ws }],
           secretWord: loadRandomWord(),
-          currentTurn: null, // Remove the initial turn selection
-          host: data.playerName, // Add host property
+          currentTurn: null,
+          host: data.playerName,
+          botStyle: data.botStyle || "regular", // Add botStyle to game state
         };
         clientInfoMap.set(ws, { gameId, playerName: data.playerName });
         console.log(`Game created: ${gameId} by player: ${data.playerName}`);
@@ -479,7 +482,7 @@ wss.on("connection", (ws) => {
             action: "game_created",
             gameId,
             playerName: data.playerName,
-            startingPlayer: data.playerName, // Send the starting player name
+            startingPlayer: data.playerName,
           })
         );
       } else if (data.action === "join_game") {

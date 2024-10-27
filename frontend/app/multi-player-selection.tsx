@@ -81,16 +81,10 @@ export default function MultiPlayerSelection() {
 
   const createGame = () => {
     if (playerName.trim()) {
-      if (isConnected && ws) {
-        ws.send(
-          JSON.stringify({
-            action: 'create_game',
-            playerName: playerName.trim(),
-          })
-        );
-      } else {
-        showAlert('Not connected to the game server. Please try again.');
-      }
+      router.push({
+        pathname: '/multi-player-setup',
+        params: { playerName: playerName.trim() },
+      });
     } else {
       showAlert('Please enter your name!');
     }
