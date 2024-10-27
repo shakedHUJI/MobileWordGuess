@@ -656,16 +656,21 @@ wss.on("connection", (ws) => {
               wordChangeVotes[gameId].votes
             ).filter((v) => v === "yes").length;
 
-            // If more than half of the other players voted yes
+            // If all players voted yes (unanimous)
             const votePassed =
-              yesVotes > (wordChangeVotes[gameId].totalPlayers - 1) / 2;
+              yesVotes === wordChangeVotes[gameId].totalPlayers - 1;
 
-            // Broadcast the result
-            broadcastGameState(gameId, {
-              action: "word_change_vote_result",
-              passed: votePassed,
-              requester: wordChangeVotes[gameId].requester,
-            });
+            if (votePassed) {
+              // Generate new word
+              const newWord = loadRandomWord();
+              game.secretWord = newWord;
+
+              // Broadcast the successful word change
+              broadcastGameState(gameId, {
+                action: "word_changed",
+                message: "The secret word has been replaced!",
+              });
+            }
 
             // Clean up the votes
             delete wordChangeVotes[gameId];

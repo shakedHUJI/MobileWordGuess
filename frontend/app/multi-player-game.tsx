@@ -201,6 +201,8 @@ Good luck, and may the best word detectives win!
     } else if (data.action === 'word_change_requested' && data.requester !== playerName) {
       setWordChangeRequester(data.requester);
       setWordChangeVotePopupVisible(true);
+    } else if (data.action === 'word_changed') {
+      Alert.alert('Word Changed', data.message);
     }
   };
 
