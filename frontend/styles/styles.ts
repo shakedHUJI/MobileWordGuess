@@ -33,6 +33,7 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 255, 255, 0.75)',
     textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 10,
+    top: '2%',
   },
   modeSelectionContainer: {
     alignItems: 'center',

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, SafeAreaView, Linking, TouchableOpacity } from 'react-native';
+import { View, Text, SafeAreaView, Linking, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { UserCircle, Users, Coffee } from 'lucide-react-native';
 import { MotiView } from 'moti';
@@ -56,6 +56,19 @@ export default function MainScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <AnimatedBackground />
+        {/* Add the robot image background */}
+        <Image
+          source={require('../assets/images/adaptive-icon.png')}
+          style={{
+            position: 'absolute',
+            width: '50%',
+            height: '50%',
+            opacity: 0.1,
+            alignSelf: 'center',
+            // top: '5%',
+          }}
+          resizeMode="contain"
+        />
         <MotiView
           from={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
