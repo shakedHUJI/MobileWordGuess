@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { Slot } from 'expo-router';
-import { View, Text } from 'react-native';
+import { View, Text, I18nManager } from 'react-native';
 import styles from '../styles/styles';
 import { WebSocketProvider } from './WebSocketProvider';
 import SoundManager from '../SoundManager'; // Adjust the path accordingly
@@ -17,6 +17,11 @@ const ErrorFallback = ({ error }: { error: Error }) => (
 
 export default function RootLayout() {
   useEffect(() => {
+    if (I18nManager.isRTL) {
+      I18nManager.allowRTL(false);
+      I18nManager.forceRTL(false);
+    }
+
     const initSound = async () => {
       const soundManager = SoundManager.getInstance();
       await soundManager.init();
@@ -24,7 +29,6 @@ export default function RootLayout() {
     initSound();
 
     return () => {
-      // Unload the sound when the app unmounts
       const soundManager = SoundManager.getInstance();
       soundManager.unload();
     };
@@ -33,7 +37,7 @@ export default function RootLayout() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <WebSocketProvider>
-        <View style={styles.container}>
+        <View style={[styles.container, { direction: 'ltr' }]}>
           <Slot />
         </View>
       </WebSocketProvider>
