@@ -1,12 +1,11 @@
 // styles.ts
 import { StyleSheet, Dimensions, Platform } from 'react-native';
 const { width, height } = Dimensions.get('window');
-// Update these color definitions at the top of the file
-const primaryColor = '#00FFFF'; // Cyan for a futuristic look
-const secondaryColor = '#4ECDC4'; // A softer teal color
-const backgroundColor = '#1E2A3A'; // Dark blue-grayish background
-const textColor = '#FFFFFF'; // White text for readability
-const inputBackgroundColor = '#2A3C50'; // Slightly lighter than the background
+const primaryColor = '#00FFFF'; 
+const secondaryColor = '#4ECDC4';
+const backgroundColor = '#1E2A3A';
+const textColor = '#FFFFFF';
+const inputBackgroundColor = '#2A3C50';
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
